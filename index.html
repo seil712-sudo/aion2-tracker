@@ -12,6 +12,7 @@
     --text: #e8e6df; --muted: #8f94a0; --accent: #e0ad45; --accent-ink: #15161a;
     --done: #62c46e; --done-bg: #1c3324; --next-bg: #3d3012;
     --danger: #e26a5f; --t0: #ffffff; --t1: #ff5ec9; --t2: #ffa23a;
+    --od: #5aa3f0; --od-bg: #1d2f45; --od-extra: #b391ee; --od-extra-bg: #2d2543;
     --radius: 8px; --shadow: 0 1px 2px rgba(0, 0, 0, .4);
   }
   @media (prefers-color-scheme: light) {
@@ -21,6 +22,7 @@
       --text: #1c1e24; --muted: #6b6f78; --accent: #b8841f; --accent-ink: #1c1e24;
       --done: #2f8f4e; --done-bg: #e3f3e8; --next-bg: #fff1cf;
       --danger: #b3382f; --t0: #111111; --t1: #c2338f; --t2: #d4720a;
+      --od: #2f7fd1; --od-bg: #dbe8f7; --od-extra: #8a5fd6; --od-extra-bg: #ebe3f9;
       --shadow: 0 1px 2px rgba(20, 20, 30, .08);
     }
   }
@@ -155,6 +157,80 @@
   .panel .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
 
   .toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 99px; font-size: 13px; box-shadow: var(--shadow); max-width: calc(100% - 32px); z-index: 5; }
+
+  /* ===== 탭 ===== */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+  .tab { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 700; font-size: 15px; padding: 10px 14px; border-bottom: 3px solid transparent; margin-bottom: -1px; cursor: pointer; border-radius: 0; }
+  .tab:hover { color: var(--text); }
+  .tab.on { color: var(--text); border-bottom-color: var(--accent); }
+  .pane { display: grid; gap: 16px; }
+  .clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+  .clock b { color: var(--text); font-weight: 500; }
+
+  /* ===== 숙제 탭 ===== */
+  .accounts { display: grid; gap: 14px; }
+  .acc { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .acchead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .acctitle { font-weight: 700; font-size: 16px; background: transparent; border: 0; padding: 2px 6px; border-radius: 4px; text-align: left; }
+  .acctitle:hover { background: var(--surface); }
+  .quota { display: flex; align-items: center; gap: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .quota .lab { color: var(--muted); }
+  .quota .qbar { width: 110px; height: 8px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
+  .quota .qbar i { display: block; height: 100%; background: var(--done); }
+  .quota .qbar i.full { background: var(--accent); }
+  .acchead .spacer { flex: 1; }
+  .mem { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+  .mem.on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .mem .d { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+  .mem.on .d { background: var(--accent); }
+  .chars { display: grid; }
+  .char { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(260px, 2fr) auto; gap: 10px 16px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .char:last-child { border-bottom: 0; }
+  @media (max-width: 860px) { .char { grid-template-columns: 1fr; } }
+  .who .hnm { font-weight: 700; font-size: 15px; }
+  .who .hnm .sv { font-size: 11px; font-weight: 500; opacity: .7; margin-left: 3px; }
+  .who .meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .who.low .hnm, .who.low .meta { color: var(--t2); }
+  .who .meta.err { color: var(--danger); }
+  .od { display: grid; gap: 5px; }
+  .odnum { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
+  .odnum b { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 22px; color: var(--od); line-height: 1; }
+  .odnum .ex { color: var(--od-extra); font-weight: 700; }
+  .odnum .max { color: var(--muted); }
+  .odnum .next { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .odnum .next.full { color: var(--done); }
+  .odnum .edit { cursor: text; border-radius: 4px; padding: 0 3px; margin: 0 -3px; border-bottom: 1px dashed transparent; }
+  .odnum .edit:hover { background: var(--surface-2); border-bottom-color: currentColor; }
+  .odnum input.odin { font: inherit; width: 5.5em; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--text); font-variant-numeric: tabular-nums; }
+  .odnum input.odin.big { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 20px; color: var(--od); width: 4em; }
+  .odnum input.odin.ex { color: var(--od-extra); font-weight: 700; }
+  .bars { display: grid; gap: 3px; }
+  .obar { height: 10px; border-radius: 99px; background: var(--od-bg); overflow: hidden; }
+  .obar i { display: block; height: 100%; background: var(--od); transition: width .25s; }
+  .obar.ex { height: 6px; background: var(--od-extra-bg); }
+  .obar.ex i { background: var(--od-extra); }
+  @media (prefers-reduced-motion: reduce) { .obar i { transition: none; } }
+  .odbtns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
+  .odbtns button { padding: 5px 9px; font-size: 12px; }
+  .odbtns button small { color: var(--muted); font-weight: 500; margin-left: 3px; }
+  .odbtns button.spend small { color: var(--danger); }
+  .odbtns button.gain small { color: var(--od-extra); }
+  .odbtns .sep { width: 1px; background: var(--line); margin: 2px 2px; }
+  .tasks { display: grid; gap: 6px; min-width: 150px; }
+  .task { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; user-select: none; }
+  .task input { width: 18px; height: 18px; accent-color: var(--done); margin: 0; cursor: pointer; }
+  .task .r { color: var(--muted); font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .task.done span.t { color: var(--done); text-decoration: line-through; }
+  .accfoot { display: flex; justify-content: flex-end; gap: 4px; padding: 4px 6px; border-top: 1px solid var(--line); }
+  .heditor { grid-column: 1 / -1; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; }
+  .heditor .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .heditor .row.end { justify-content: flex-end; }
+  .heditor .grow { flex: 1; }
+  .heditor label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+  .heditor input[type="text"], .heditor input[type="number"] { font: inherit; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); width: 100%; }
+  .heditor .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  @media (max-width: 480px) { .heditor .two { grid-template-columns: 1fr; } }
+  .heditor .hint { font-size: 12px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -170,12 +246,11 @@
     </div>
   </header>
 
-  <div class="toolbar">
-    <button type="button" id="btnReset" class="primary">주간 초기화</button>
-    <button type="button" id="btnSettings">설정</button>
-    <button type="button" id="btnPower" title="NC 캐릭터 정보실에서 전투력을 다시 불러옵니다">전투력 갱신</button>
-    <span class="legend" id="legend"></span>
-    <span class="me">체크하는 사람: <b id="meName">-</b> <button type="button" class="ghost" id="btnMe">변경</button></span>
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab on" id="tabParty" role="tab">파티</button>
+    <button type="button" class="tab" id="tabHw" role="tab">숙제</button>
+    <span style="flex:1"></span>
+    <span class="clock" style="align-self:center">서버 시간 <b id="clock">--:--</b> · <span id="weekReset"></span></span>
   </div>
 
   <div class="notice" id="notice" hidden></div>
@@ -185,6 +260,29 @@
     <div class="sub">체크한 사람이 누구인지 표시할 때 씁니다. 이 기기에만 저장됩니다.</div>
     <input type="text" id="meInput" maxlength="12" placeholder="예: 현덕">
     <div class="actions"><button type="button" id="meYes" class="primary">저장</button></div>
+  </div>
+
+  <!-- ===== 숙제 탭 ===== -->
+  <section class="pane" id="paneHw" hidden>
+    <div class="toolbar">
+      <button type="button" class="primary" id="btnAddAcc">+ 계정 추가</button>
+      <span class="legend">
+        <span class="chip"><span class="dot" style="background:var(--od)"></span>기본 오드 (최대 840 · 3시간마다 +10, 멤버십 계정 +15)</span>
+        <span class="chip"><span class="dot" style="background:var(--od-extra)"></span>추가 오드 (최대 2,000 · 소모품으로만 충전)</span>
+      </span>
+    </div>
+    <div class="notice">원정·초월 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
+    <div class="accounts" id="accounts"></div>
+  </section>
+
+  <!-- ===== 파티 탭 ===== -->
+  <section class="pane" id="paneParty">
+  <div class="toolbar">
+    <button type="button" id="btnReset" class="primary">주간 초기화</button>
+    <button type="button" id="btnSettings">설정</button>
+    <button type="button" id="btnPower" title="NC 캐릭터 정보실에서 전투력을 다시 불러옵니다">전투력 갱신</button>
+    <span class="legend" id="legend"></span>
+    <span class="me">체크하는 사람: <b id="meName">-</b> <button type="button" class="ghost" id="btnMe">변경</button></span>
   </div>
 
   <div class="panel" id="resetPanel" hidden>
@@ -224,6 +322,7 @@
   </div>
 
   <div class="groups" id="groups"></div>
+  </section>
 </div>
 <datalist id="serverList"></datalist>
 
@@ -714,6 +813,342 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     await safeWrite(() => batch.commit(), '시트 데이터를 넣었습니다');
   }
 
+  // =====================================================================
+  // 숙제 탭
+  // =====================================================================
+  const OD_MAX = 840, OD_EXTRA_MAX = 2000;
+  const OD_REGEN = { normal: 10, member: 15 };          // 3시간마다
+  const QUOTA = { exp: 83, trans: 55 };                 // 계정별 주간 100% 보상 횟수
+  const ACTIONS = [
+    { key: 'exp',   label: '원정 보통',    cost: 40 },
+    { key: 'exp',   label: '원정 어려움',  cost: 60 },
+    { key: 'trans', label: '초월 1~3단계', cost: 40 },
+    { key: 'trans', label: '초월 4단계',   cost: 60 },
+  ];
+  const TASKS = [
+    { key: 'awaken',  label: '각성전',    reset: 'week' },
+    { key: 'cor_low', label: '회랑 하층', reset: 'corridor' },
+    { key: 'cor_mid', label: '회랑 중층', reset: 'corridor' },
+  ];
+  // --- KST 시간 계산 ---
+  const KST = 9 * 3600 * 1000;
+  const kst = (t) => new Date(t + KST);
+  const fromKst = (y, mo, d, h, mi) => Date.UTC(y, mo, d, h, mi) - KST;
+  function regenTicks(from, to) {
+    if (to <= from) return 0;
+    const slot = (t) => { const d = kst(t); return Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours()) / 3600000) / 3); };
+    return slot(to) - slot(from);
+  }
+  function nextTickAt(now) { const d = kst(now); const h = Math.floor(d.getUTCHours() / 3) * 3 + 3; return fromKst(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h, 0); }
+  function weekStart(now) { const d = kst(now); let diff = (d.getUTCDay() - 3 + 7) % 7; if (diff === 0 && d.getUTCHours() < 5) diff = 7; return fromKst(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - diff, 5, 0); }
+  function corridorStart(now) {
+    const d = kst(now);
+    for (let back = 0; back < 7; back++) {
+      const dd = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - back)); const dow = dd.getUTCDay();
+      if (dow === 2 || dow === 4 || dow === 6) { const t = fromKst(dd.getUTCFullYear(), dd.getUTCMonth(), dd.getUTCDate(), 21, 0); if (t <= now) return t; }
+    }
+    return now;
+  }
+  function fmtLeft(ms) { if (ms <= 0) return '지금'; const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000); return h ? `${h}시간 ${m}분` : `${m}분`; }
+  function fmtKst(t) { const d = kst(t); return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; }
+  function fmtN(n) { return Number(n).toLocaleString('ko-KR'); }
+  const tsOf = (v) => (v == null ? 0 : (typeof v === 'number' ? v : (Date.parse(v) || 0)));
+
+  let hwAccounts = [], hwChars = [];
+  let hwEditing = null;   // {aid, kind:'title'} | {aid, cid}
+  let odEditing = null;   // {cid, field}
+  let hwUndo = null;      // {aid, cid, before:{od, odAt, extra, counts}, label}
+  let hwLoaded = { acc: false, chars: false };
+  const charsOf = (aid) => hwChars.filter(c => c.account === aid).sort((a, b) => a.order - b.order);
+
+  function currentOd(a, c, now) { const rate = a.member ? OD_REGEN.member : OD_REGEN.normal; return Math.min(OD_MAX, (c.od || 0) + regenTicks(tsOf(c.odAt) || now, now) * rate); }
+  function effCounts(a, now) { return tsOf(a.weekKey) === weekStart(now) ? { exp: (a.counts || {}).exp || 0, trans: (a.counts || {}).trans || 0 } : { exp: 0, trans: 0 }; }
+  function taskDone(c, t, now) { const at = tsOf((c.tasks || {})[t.key]); if (!at) return false; return at >= (t.reset === 'week' ? weekStart(now) : corridorStart(now)); }
+
+  // --- 동작 ---
+  async function hwSpend(a, c, action) {
+    const now = Date.now();
+    const od = currentOd(a, c, now);
+    const cost = action.cost * (a.member ? 2 : 1);
+    if (od + (c.extra || 0) < cost) { toast(`오드가 부족합니다 (필요 ${cost}, 보유 ${od}+${c.extra || 0})`); return; }
+    const counts = effCounts(a, now);
+    const before = { od: c.od, odAt: c.odAt, extra: c.extra || 0, counts: { ...(a.counts || {}) }, weekKey: a.weekKey };
+    const fromBasic = Math.min(od, cost);
+    const newOd = od - fromBasic, newExtra = (c.extra || 0) - (cost - fromBasic);
+    counts[action.key] = (counts[action.key] || 0) + 1;
+    const batch = db.batch();
+    batch.update(db.collection('hwChars').doc(c.id), { od: newOd, odAt: now, extra: newExtra });
+    batch.update(db.collection('hwAccounts').doc(a.id), { counts, weekKey: weekStart(now) });
+    const ok = await safeWrite(() => batch.commit());
+    if (!ok) return;
+    Object.assign(c, { od: newOd, odAt: now, extra: newExtra }); a.counts = counts; a.weekKey = weekStart(now);
+    hwUndo = { aid: a.id, cid: c.id, before, label: `${c.name} ${action.label}` };
+    renderHw();
+    const over = counts[action.key] > QUOTA[action.key];
+    toast(`${c.name} · ${action.label} −${cost}${cost - fromBasic ? ` (추가 오드 ${cost - fromBasic})` : ''}${over ? ' · 주간 100% 보상 횟수 초과' : ''}`);
+  }
+  async function hwUndoLast() {
+    const u = hwUndo; if (!u) return;
+    const a = hwAccounts.find(x => x.id === u.aid), c = hwChars.find(x => x.id === u.cid); if (!a || !c) { hwUndo = null; renderHw(); return; }
+    const batch = db.batch();
+    batch.update(db.collection('hwChars').doc(c.id), { od: u.before.od, odAt: u.before.odAt ?? Date.now(), extra: u.before.extra });
+    batch.update(db.collection('hwAccounts').doc(a.id), { counts: u.before.counts, weekKey: u.before.weekKey ?? weekStart(Date.now()) });
+    const ok = await safeWrite(() => batch.commit(), `되돌림: ${u.label}`);
+    if (ok) { Object.assign(c, { od: u.before.od, odAt: u.before.odAt, extra: u.before.extra }); a.counts = u.before.counts; a.weekKey = u.before.weekKey; hwUndo = null; renderHw(); }
+  }
+  async function hwGainExtra(a, c, n) {
+    const extra = Math.min(OD_EXTRA_MAX, (c.extra || 0) + n);
+    const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update({ extra }), `${c.name} · 추가 오드 +${n}`);
+    if (ok) { c.extra = extra; hwUndo = null; renderHw(); }
+  }
+  async function hwSetOd(a, c, field, raw) {
+    const n = Math.round(Number(raw));
+    if (isNaN(n)) { odEditing = null; renderHw(); return; }
+    const patch = field === 'od' ? { od: Math.max(0, Math.min(OD_MAX, n)), odAt: Date.now() } : { extra: Math.max(0, Math.min(OD_EXTRA_MAX, n)) };
+    odEditing = null;
+    const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update(patch));
+    if (ok) { Object.assign(c, patch); hwUndo = null; renderHw(); toast(`${c.name} · ${field === 'od' ? '기본' : '추가'} 오드를 ${field === 'od' ? patch.od : patch.extra}(으)로 맞췄습니다`); }
+  }
+  async function hwToggleTask(c, t, on) {
+    const tasks = { ...(c.tasks || {}) }; if (on) tasks[t.key] = Date.now(); else delete tasks[t.key];
+    const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update({ tasks }));
+    if (ok) { c.tasks = tasks; renderHw(); }
+  }
+  async function hwToggleMember(a) {
+    const now = Date.now();
+    const batch = db.batch();
+    // 충전 속도가 바뀌므로 현재 오드를 확정해 두고 전환
+    charsOf(a.id).forEach(c => batch.update(db.collection('hwChars').doc(c.id), { od: currentOd(a, c, now), odAt: now }));
+    batch.update(db.collection('hwAccounts').doc(a.id), { member: !a.member });
+    const ok = await safeWrite(() => batch.commit(), `${a.title} 멤버십 ${!a.member ? 'ON · 충전 +15, 소모 2배' : 'OFF · 충전 +10'}`);
+    if (ok) { charsOf(a.id).forEach(c => { c.od = currentOd(a, c, now); c.odAt = now; }); a.member = !a.member; renderHw(); }
+  }
+  async function hwAddAccount() {
+    if (!db) return;
+    const maxOrder = hwAccounts.reduce((m, a) => Math.max(m, a.order || 0), 0);
+    const id = 'acc' + Date.now().toString(36);
+    const ok = await safeWrite(() => db.collection('hwAccounts').doc(id).set({ order: maxOrder + 1, title: '새 계정', member: false, counts: { exp: 0, trans: 0 }, weekKey: weekStart(Date.now()) }));
+    if (ok) hwEditing = { aid: id, kind: 'title' };
+  }
+  async function hwAddChar(a) {
+    const rows = charsOf(a.id);
+    const id = 'hc' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const ok = await safeWrite(() => db.collection('hwChars').doc(id).set({ account: a.id, order: rows.reduce((m, c) => Math.max(m, c.order || 0), 0) + 1, name: '', server: '', od: 0, odAt: Date.now(), extra: 0, tasks: {} }));
+    if (ok) hwEditing = { aid: a.id, cid: id };
+  }
+  async function hwSaveChar(a, c, patch) {
+    const changed = patch.name !== c.name || patch.server !== c.server;
+    if (changed) Object.assign(patch, { cls: null, power: null, powerAt: null, serverShort: null, charUrl: null, powerError: null });
+    hwEditing = null;
+    const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update(patch));
+    if (ok) { Object.assign(c, patch); renderHw(); if (patch.name && (changed || c.power == null)) refreshHwPowers(false); }
+  }
+  async function hwDeleteChar(c) { const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).delete(), '캐릭터를 삭제했습니다'); if (ok) hwEditing = null; }
+  async function hwDeleteAccount(a) {
+    const batch = db.batch();
+    charsOf(a.id).forEach(c => batch.delete(db.collection('hwChars').doc(c.id)));
+    batch.delete(db.collection('hwAccounts').doc(a.id));
+    await safeWrite(() => batch.commit(), '계정을 삭제했습니다');
+  }
+  // --- 숙제 탭 전투력 조회 (파티 탭과 같은 중계 서버) ---
+  let hwPowerBusy = false;
+  async function refreshHwPowers(force) {
+    if (!db || hwPowerBusy) return;
+    const now = Date.now();
+    const targets = hwChars.filter(c => c.name && (force || c.power == null || !c.powerAt || now - tsOf(c.powerAt) > POWER_STALE_MS));
+    if (!targets.length) return;
+    hwPowerBusy = true;
+    try {
+      for (const c of targets) {
+        let patch;
+        try {
+          const j = await fetchPower({ charName: c.name, charServer: c.server });
+          patch = { cls: j.className || null, power: j.combatPower ?? null, powerAt: new Date().toISOString(), serverShort: j.serverShort || null, charUrl: j.url || null, powerError: null };
+        } catch (e) { patch = { powerError: String(e.message || e) }; }
+        try { await db.collection('hwChars').doc(c.id).update(patch); Object.assign(c, patch); } catch (e) { console.error(e); }
+      }
+    } finally { hwPowerBusy = false; renderHw(); }
+  }
+
+  // --- 렌더 ---
+  function renderClock() {
+    const now = Date.now();
+    $('clock').textContent = fmtKst(now);
+    $('weekReset').textContent = `주간 초기화까지 ${fmtLeft(weekStart(now) + 7 * 86400000 - now)}`;
+  }
+  function renderHw() {
+    renderClock();
+    const now = Date.now();
+    const root = $('accounts'); root.replaceChildren();
+    $('btnAddAcc').disabled = !db;
+    const accs = hwAccounts.slice().sort((a, b) => a.order - b.order);
+    accs.forEach(a => root.appendChild(renderAccount(a, now)));
+    if (!accs.length) { const e = document.createElement('div'); e.className = 'notice'; e.textContent = hwLoaded.acc ? '계정이 없습니다. "+ 계정 추가"를 눌러 시작하세요.' : '데이터를 불러오는 중…'; root.appendChild(e); }
+  }
+  function renderAccount(a, now) {
+    const counts = effCounts(a, now);
+    const box = document.createElement('section'); box.className = 'acc';
+    const head = document.createElement('div'); head.className = 'acchead';
+    const title = document.createElement('button'); title.type = 'button'; title.className = 'acctitle'; title.textContent = a.title || '(이름 없음)'; title.title = '계정 이름 수정';
+    title.addEventListener('click', () => { hwEditing = { aid: a.id, kind: 'title' }; renderHw(); });
+    head.appendChild(title);
+    [['원정', 'exp'], ['초월', 'trans']].forEach(([lab, k]) => {
+      const n = counts[k] || 0, max = QUOTA[k];
+      const q = document.createElement('div'); q.className = 'quota';
+      q.innerHTML = `<span class="lab">${lab}</span><span><b>${n}</b> / ${max}</span><span class="qbar"><i class="${n >= max ? 'full' : ''}" style="width:${Math.min(100, n / max * 100)}%"></i></span>`;
+      q.title = n >= max ? `${lab} 주간 100% 보상 횟수를 모두 썼습니다` : `${lab} 100% 보상 ${max - n}회 남음`;
+      head.appendChild(q);
+    });
+    const mem = document.createElement('button'); mem.type = 'button'; mem.className = 'mem' + (a.member ? ' on' : '');
+    mem.innerHTML = `<span class="d"></span>멤버십 ${a.member ? 'ON' : 'OFF'}`; mem.title = '계정 멤버십: 켜면 3시간마다 +15 충전, 원정·초월 소모 2배';
+    mem.disabled = !db; mem.addEventListener('click', () => hwToggleMember(a)); head.appendChild(mem);
+    const sp = document.createElement('span'); sp.className = 'spacer'; head.appendChild(sp);
+    if (hwUndo && hwUndo.aid === a.id) { const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = `↶ 되돌리기 (${hwUndo.label})`; u.addEventListener('click', hwUndoLast); head.appendChild(u); }
+    if (hwEditing && hwEditing.aid === a.id && hwEditing.kind === 'title') {
+      const ed = document.createElement('div'); ed.className = 'heditor'; ed.style.width = '100%';
+      ed.innerHTML = `<div class="row"><input class="grow" type="text" maxlength="20" placeholder="계정 이름"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
+      const inp = ed.querySelector('input'); inp.value = a.title || '';
+      const saveT = async () => { const title = inp.value.trim(); hwEditing = null; const ok = await safeWrite(() => db.collection('hwAccounts').doc(a.id).update({ title })); if (ok) { a.title = title; renderHw(); } };
+      ed.querySelector('[data-act="save"]').addEventListener('click', saveT);
+      ed.querySelector('[data-act="cancel"]').addEventListener('click', () => { hwEditing = null; renderHw(); });
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveT(); if (e.key === 'Escape') { hwEditing = null; renderHw(); } });
+      head.replaceChildren(ed); setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    }
+    box.appendChild(head);
+
+    const chars = document.createElement('div'); chars.className = 'chars';
+    const rows = charsOf(a.id);
+    rows.forEach(c => chars.appendChild(renderHwChar(a, c, now)));
+    if (!rows.length) { const e = document.createElement('div'); e.className = 'notice'; e.style.margin = '10px'; e.textContent = '캐릭터가 없습니다. 아래 "+ 캐릭터 추가"를 누르세요.'; chars.appendChild(e); }
+    box.appendChild(chars);
+
+    const foot = document.createElement('div'); foot.className = 'accfoot';
+    foot.innerHTML = `<button type="button" class="ghost" data-act="add">+ 캐릭터 추가</button><button type="button" class="ghost danger" data-act="del">계정 삭제</button>`;
+    foot.querySelector('[data-act="add"]').addEventListener('click', () => hwAddChar(a));
+    foot.querySelector('[data-act="del"]').addEventListener('click', () => {
+      foot.innerHTML = `<span style="color:var(--danger);align-self:center;font-size:13px">"${esc(a.title)}" 계정과 캐릭터 ${rows.length}개를 삭제할까요?</span><button type="button" class="ghost" data-act="no">취소</button><button type="button" class="danger" data-act="yes">삭제</button>`;
+      foot.querySelector('[data-act="no"]').addEventListener('click', renderHw);
+      foot.querySelector('[data-act="yes"]').addEventListener('click', () => hwDeleteAccount(a));
+    });
+    box.appendChild(foot);
+    return box;
+  }
+  function renderHwChar(a, c, now) {
+    const row = document.createElement('div'); row.className = 'char';
+    const od = currentOd(a, c, now);
+    const rate = a.member ? OD_REGEN.member : OD_REGEN.normal;
+    const sv = c.serverShort || serverShorts[c.server] || (c.server || '').slice(0, 2);
+
+    const who = document.createElement('div'); who.className = 'who' + (typeof c.power === 'number' && c.power < LOW_POWER ? ' low' : '');
+    let meta;
+    if (!c.name) meta = '<div class="meta">캐릭터명을 입력하세요</div>';
+    else if (c.powerError) meta = `<div class="meta err" title="${esc(c.powerError)}">전투력 조회 실패</div>`;
+    else if (typeof c.power !== 'number') meta = '<div class="meta">전투력 조회 중…</div>';
+    else meta = `<div class="meta" title="${c.powerAt ? fmtDate(c.powerAt) + ' 조회' : ''}">${c.cls ? esc(c.cls) + ' · ' : ''}${fmtPower(c.power)}</div>`;
+    who.innerHTML = `<div class="hnm">${c.name ? esc(c.name) : '<span style="color:var(--muted)">이름 없음</span>'}${c.server ? `<span class="sv">[${esc(sv)}]</span>` : ''}</div>${meta}
+      <button type="button" class="ghost" data-act="edit" style="margin-top:4px;font-size:12px;padding-left:0">캐릭터 수정</button>`;
+    who.querySelector('[data-act="edit"]').addEventListener('click', () => { hwEditing = { aid: a.id, cid: c.id }; renderHw(); });
+    row.appendChild(who);
+
+    const odBox = document.createElement('div'); odBox.className = 'od';
+    const nextTxt = od >= OD_MAX ? '<span class="next full">기본 오드 가득 참</span>' : `<span class="next">다음 충전 +${rate} · ${fmtLeft(nextTickAt(now) - now)} 후 (${fmtKst(nextTickAt(now))})</span>`;
+    const edOd = odEditing && odEditing.cid === c.id && odEditing.field === 'od';
+    const edEx = odEditing && odEditing.cid === c.id && odEditing.field === 'extra';
+    const basicHtml = edOd ? `<input class="odin big" type="number" min="0" max="${OD_MAX}" step="1" value="${od}" aria-label="기본 오드">` : `<b class="edit" title="누르면 기본 오드를 직접 입력" tabindex="0" role="button">${fmtN(od)}</b>`;
+    const extraHtml = edEx ? `<span class="ex">(+<input class="odin ex" type="number" min="0" max="${OD_EXTRA_MAX}" step="1" value="${c.extra || 0}" aria-label="추가 오드">)</span>` : `<span class="ex edit" title="누르면 추가 오드를 직접 입력" tabindex="0" role="button">(+${fmtN(c.extra || 0)})</span>`;
+    odBox.innerHTML = `<div class="odnum">${basicHtml}${extraHtml}<span class="max">/ ${fmtN(OD_MAX)}</span>${nextTxt}</div>
+      <div class="bars"><div class="obar" title="기본 오드 ${od} / ${OD_MAX}"><i style="width:${od / OD_MAX * 100}%"></i></div><div class="obar ex" title="추가 오드 ${c.extra || 0} / ${OD_EXTRA_MAX}"><i style="width:${(c.extra || 0) / OD_EXTRA_MAX * 100}%"></i></div></div>
+      <div class="odbtns"></div>`;
+    const wireIn = (inp, field) => {
+      let done = false;
+      const commit = () => { if (done) return; done = true; hwSetOd(a, c, field, inp.value); };
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { done = true; odEditing = null; renderHw(); } });
+      inp.addEventListener('blur', commit);
+      setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    };
+    const bIn = odBox.querySelector('input.odin.big'); if (bIn) wireIn(bIn, 'od');
+    const eIn = odBox.querySelector('input.odin.ex'); if (eIn) wireIn(eIn, 'extra');
+    odBox.querySelectorAll('.edit').forEach(el => {
+      const field = el.classList.contains('ex') ? 'extra' : 'od';
+      const open = () => { if (!db) return; odEditing = { cid: c.id, field }; renderHw(); };
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+    const btns = odBox.querySelector('.odbtns');
+    ACTIONS.forEach(act => {
+      const cost = act.cost * (a.member ? 2 : 1);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'spend';
+      b.innerHTML = `${esc(act.label)}<small>−${cost}</small>`;
+      b.disabled = !db || od + (c.extra || 0) < cost;
+      b.title = od + (c.extra || 0) < cost ? '오드가 부족합니다' : `${act.label}: 오드 ${cost} 소모, ${act.key === 'exp' ? '원정' : '초월'} 횟수 +1`;
+      b.addEventListener('click', () => hwSpend(a, c, act));
+      btns.appendChild(b);
+    });
+    const sep = document.createElement('span'); sep.className = 'sep'; btns.appendChild(sep);
+    [10, 40].forEach(n => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'gain';
+      b.innerHTML = `${n === 10 ? '소형' : '대형'} 소모품<small>+${n}</small>`; b.title = `추가 오드 +${n}`;
+      b.disabled = !db || (c.extra || 0) >= OD_EXTRA_MAX;
+      b.addEventListener('click', () => hwGainExtra(a, c, n));
+      btns.appendChild(b);
+    });
+    row.appendChild(odBox);
+
+    const tasks = document.createElement('div'); tasks.className = 'tasks';
+    TASKS.forEach(t => {
+      const done = taskDone(c, t, now);
+      const l = document.createElement('label'); l.className = 'task' + (done ? ' done' : '');
+      l.innerHTML = `<input type="checkbox" ${done ? 'checked' : ''} ${db ? '' : 'disabled'}><span class="t">${esc(t.label)}</span><span class="r" title="초기화 시각">${t.reset === 'week' ? '수 05시' : '화·목·토 21시'}</span>`;
+      l.querySelector('input').addEventListener('change', (e) => hwToggleTask(c, t, e.target.checked));
+      tasks.appendChild(l);
+    });
+    row.appendChild(tasks);
+
+    if (hwEditing && hwEditing.aid === a.id && hwEditing.cid === c.id) row.appendChild(buildHwCharEditor(a, c, od));
+    return row;
+  }
+  function buildHwCharEditor(a, c, od) {
+    const ed = document.createElement('div'); ed.className = 'heditor';
+    ed.innerHTML = `
+      <div class="two">
+        <label>캐릭터명 <input type="text" class="cname" maxlength="20" placeholder="예: ID현덕"></label>
+        <label>서버 <input type="text" class="cserver" maxlength="10" list="serverList" placeholder="예: 젠카"></label>
+      </div>
+      <div class="two">
+        <label>현재 기본 오드 (0~840) <input type="number" class="cod" min="0" max="840" step="1"></label>
+        <label>현재 추가 오드 (0~2000) <input type="number" class="cextra" min="0" max="2000" step="1"></label>
+      </div>
+      <div class="hint">캐릭터명과 서버를 넣으면 직업과 전투력을 NC 캐릭터 정보실에서 가져옵니다. 오드는 게임 화면 수치를 그대로 적으면 되고, 저장한 시각부터 3시간 경계마다 자동 충전됩니다.${c.charUrl ? ` <a href="${esc(c.charUrl)}" target="_blank" rel="noopener">정보실에서 보기</a>` : ''}</div>
+      <div class="row end"><button type="button" class="ghost danger" data-act="del">캐릭터 삭제</button><span class="grow"></span><button type="button" data-act="cancel">취소</button><button type="button" class="primary" data-act="save">저장</button></div>`;
+    ed.querySelector('.cname').value = c.name || ''; ed.querySelector('.cserver').value = c.server || '';
+    ed.querySelector('.cod').value = od; ed.querySelector('.cextra').value = c.extra || 0;
+    const saveC = () => hwSaveChar(a, c, {
+      name: ed.querySelector('.cname').value.trim(), server: ed.querySelector('.cserver').value.trim(),
+      od: Math.max(0, Math.min(OD_MAX, Math.round(Number(ed.querySelector('.cod').value) || 0))), odAt: Date.now(),
+      extra: Math.max(0, Math.min(OD_EXTRA_MAX, Math.round(Number(ed.querySelector('.cextra').value) || 0))),
+    });
+    ed.querySelector('[data-act="save"]').addEventListener('click', saveC);
+    ed.querySelector('[data-act="cancel"]').addEventListener('click', () => { if (!c.name) { hwDeleteChar(c); } else { hwEditing = null; renderHw(); } });
+    ed.querySelector('[data-act="del"]').addEventListener('click', () => hwDeleteChar(c));
+    ed.querySelectorAll('input').forEach(i => i.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveC(); if (e.key === 'Escape') { hwEditing = null; renderHw(); } }));
+    setTimeout(() => { ed.querySelector('.cname').focus(); }, 0);
+    return ed;
+  }
+
+  // --- 탭 ---
+  function showTab(name) {
+    const hw = name === 'hw';
+    $('paneHw').hidden = !hw; $('paneParty').hidden = hw;
+    $('tabHw').classList.toggle('on', hw); $('tabParty').classList.toggle('on', !hw);
+    try { localStorage.setItem('aion2.tab', name); } catch (e) { /* ignore */ }
+  }
+  $('tabHw').addEventListener('click', () => showTab('hw'));
+  $('tabParty').addEventListener('click', () => showTab('party'));
+  $('btnAddAcc').addEventListener('click', hwAddAccount);
+  try { showTab(localStorage.getItem('aion2.tab') === 'hw' ? 'hw' : 'party'); } catch (e) { showTab('party'); }
+  renderClock();
+  setInterval(() => { renderClock(); if (!odEditing && !hwEditing) renderHw(); }, 30000);
+
   // ---------- wiring ----------
   $('btnReset').addEventListener('click', () => { $('settingsPanel').hidden = true; editing = null; render(); $('resetPanel').hidden = false; });
   $('resetNo').addEventListener('click', () => { $('resetPanel').hidden = true; });
@@ -783,6 +1218,22 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
       if (first) setTimeout(() => refreshPowers(false), 500); // 페이지를 열 때 오래된 전투력만 자동 갱신
     }, (e) => { console.error(e); showNotice('데이터베이스에 연결하지 못했습니다: ' + esc(e.message), true); });
     loadServerList();
+
+    // 숙제 탭 데이터
+    db.collection('hwAccounts').onSnapshot((snap) => {
+      hwAccounts = snap.docs.map(d => { const x = d.data() || {}; return { id: d.id, order: Number(x.order) || 0, title: String(x.title ?? ''), member: !!x.member, counts: x.counts || { exp: 0, trans: 0 }, weekKey: x.weekKey ?? null }; });
+      hwLoaded.acc = true;
+      if (hwEditing && hwEditing.aid && !hwAccounts.some(a => a.id === hwEditing.aid)) hwEditing = null;
+      renderHw();
+    }, (e) => { console.error(e); showNotice('숙제 데이터에 연결하지 못했습니다: ' + esc(e.message), true); });
+    db.collection('hwChars').onSnapshot((snap) => {
+      hwChars = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+      const first = !hwLoaded.chars; hwLoaded.chars = true;
+      if (hwEditing && hwEditing.cid && !hwChars.some(c => c.id === hwEditing.cid)) hwEditing = null;
+      if (odEditing && !hwChars.some(c => c.id === odEditing.cid)) odEditing = null;
+      renderHw();
+      if (first) setTimeout(() => refreshHwPowers(false), 800);
+    }, (e) => { console.error(e); showNotice('숙제 데이터에 연결하지 못했습니다: ' + esc(e.message), true); });
   }
 })();
 </script>
