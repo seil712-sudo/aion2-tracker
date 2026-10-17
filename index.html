@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>아이온2 주간 파티 트래커</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #121418; --surface: #1b1e25; --surface-2: #242831; --line: #343946;
+    --text: #e8e6df; --muted: #8f94a0; --accent: #e0ad45; --accent-ink: #15161a;
+    --done: #62c46e; --done-bg: #1c3324; --next-bg: #3d3012;
+    --danger: #e26a5f; --t0: #ffffff; --t1: #ff5ec9; --t2: #ffa23a;
+    --radius: 8px; --shadow: 0 1px 2px rgba(0, 0, 0, .4);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      color-scheme: light;
+      --bg: #f3f1ec; --surface: #ffffff; --surface-2: #ebe8e0; --line: #d8d4ca;
+      --text: #1c1e24; --muted: #6b6f78; --accent: #b8841f; --accent-ink: #1c1e24;
+      --done: #2f8f4e; --done-bg: #e3f3e8; --next-bg: #fff1cf;
+      --danger: #b3382f; --t0: #111111; --t1: #c2338f; --t2: #d4720a;
+      --shadow: 0 1px 2px rgba(20, 20, 30, .08);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.45; padding-inline: 16px;
+    padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(48px + env(safe-area-inset-bottom, 0px));
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; display: grid; gap: 16px; }
+
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  h1 { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 30px; line-height: 1.1; margin: 0; text-wrap: balance; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .meter { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+  .meter b { font-size: 28px; font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; color: var(--done); line-height: 1; }
+  .meter small { color: var(--muted); }
+  .bar { width: 160px; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }
+  .bar i { display: block; height: 100%; background: var(--done); width: 0; transition: width .3s; }
+  @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button { font: inherit; font-weight: 500; cursor: pointer; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); color: var(--text); padding: 7px 12px; line-height: 1.2; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button.danger { color: var(--danger); }
+  button.ghost { border-color: transparent; background: transparent; color: var(--muted); padding: 4px 8px; }
+  button.ghost:hover { color: var(--text); }
+  button[disabled] { opacity: .5; cursor: default; }
+
+  .me { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  .me b { color: var(--text); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; color: var(--muted); font-size: 13px; }
+  .legend .chip { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot.t0 { background: var(--t0); } .dot.t1 { background: var(--t1); } .dot.t2 { background: var(--t2); } .dot.tn { background: var(--muted); }
+
+  .notice { padding: 10px 12px; border-radius: var(--radius); background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+  .notice.warn { color: var(--accent); border-color: var(--accent); }
+  .notice code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+
+  .top { display: grid; grid-template-columns: 1fr minmax(260px, 340px); gap: 12px; align-items: stretch; }
+  @media (max-width: 720px) { .top { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; }
+  .card h2 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: .04em; }
+  .seq { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 4px; }
+  .seq .step { display: inline-flex; align-items: center; justify-content: center; min-width: 42px; height: 38px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 18px; font-variant-numeric: tabular-nums; color: var(--text); cursor: pointer; }
+  .seq .step:hover { border-color: var(--accent); }
+  .seq .step.done { background: var(--done-bg); border-color: var(--done); color: var(--done); }
+  .seq .step.next { background: var(--next-bg); border-color: var(--accent); box-shadow: 0 0 0 2px var(--next-bg); position: relative; }
+  .seq .step.next::after { content: "다음"; position: absolute; top: -9px; right: -6px; font-family: "Noto Sans KR", sans-serif; font-size: 10px; background: var(--accent); color: var(--accent-ink); padding: 0 5px; border-radius: 99px; line-height: 14px; }
+  .seq .step[disabled] { cursor: default; }
+  .seq .arrow { color: var(--muted); font-size: 12px; }
+  .seq .hint { width: 100%; color: var(--muted); font-size: 12px; }
+  .cur { display: grid; gap: 8px; }
+  .cur .curhead { display: flex; align-items: baseline; gap: 8px; }
+  .cur .curnum { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 34px; line-height: 1; color: var(--accent); }
+  .cur .curnum small { font-family: "Noto Sans KR", sans-serif; font-size: 13px; color: var(--muted); margin-left: 2px; }
+  .cur .curboss { font-weight: 700; font-size: 16px; }
+  .cur .currows { display: grid; gap: 4px; }
+  .cur .currow { display: grid; grid-template-columns: 7em 1fr; align-items: center; padding: 6px 8px; border-radius: 6px; background: var(--surface-2); }
+  .cur .currow .pl { color: var(--muted); font-size: 12px; }
+  .cur .currow .ch { font-weight: 700; font-size: 15px; }
+  .cur .currow .ch.t0 { color: var(--t0); } .cur .currow .ch.t1 { color: var(--t1); } .cur .currow .ch.t2 { color: var(--t2); }
+  .cur .currow .ch .empty { color: var(--muted); font-weight: 400; }
+  .cur .curdone { color: var(--done); font-weight: 700; padding: 12px 0; }
+  .cur button.primary { width: 100%; padding: 10px; font-size: 15px; }
+
+  .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; align-items: start; }
+  .group { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .ghead { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .ghead .gtitle { font-weight: 700; background: transparent; border: 0; padding: 2px 4px; border-radius: 4px; text-align: left; }
+  .ghead .gtitle:hover { background: var(--surface); }
+  .ghead .gcount { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .tscroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 320px; font-variant-numeric: tabular-nums; }
+  th, td { border-bottom: 1px solid var(--line); padding: 0; text-align: center; height: 38px; }
+  th { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: .02em; height: 32px; background: var(--surface); }
+  th button.hed { width: 100%; height: 100%; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; padding: 0 6px; }
+  th button.hed:hover { background: var(--surface-2); }
+  th.c-done, td.c-done { width: 48px; }
+  th.c-num, td.c-num { width: 44px; }
+  td.c-num { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 17px; }
+  tr.done td { background: var(--done-bg); }
+  tr.done td.c-num { color: var(--done); }
+  tr.done td.c-cell button { text-decoration: line-through; opacity: .75; }
+  td.c-done input { width: 22px; height: 22px; accent-color: var(--done); cursor: pointer; margin: 0; vertical-align: middle; }
+  td.c-cell button { width: 100%; height: 100%; min-height: 38px; border: 0; border-radius: 0; background: transparent; padding: 4px 8px; font-weight: 500; }
+  td.c-cell button:hover { background: var(--surface-2); }
+  td.c-cell button.t0 { color: var(--t0); } td.c-cell button.t1 { color: var(--t1); } td.c-cell button.t2 { color: var(--t2); }
+  td.c-cell button .empty { color: var(--muted); font-weight: 400; }
+  td.c-who { font-size: 11px; color: var(--muted); max-width: 8ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+  tr.edrow td { padding: 0; background: var(--surface-2); height: auto; }
+  tr.lastrow td { border-bottom: 0; }
+  .gfoot { display: flex; justify-content: flex-end; gap: 4px; padding: 4px 6px; border-top: 1px solid var(--line); }
+
+  .editor { padding: 10px; display: grid; gap: 8px; text-align: left; }
+  .editor input[type="text"] { font: inherit; width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .editor .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .editor .row.end { justify-content: flex-end; }
+  .editor .row .grow { flex: 1; }
+  .pick { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; font-size: 13px; }
+  .pick.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 10px; box-shadow: var(--shadow); }
+  .panel h2 { margin: 0; font-size: 16px; }
+  .panel label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  .panel .mrow { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+  .panel input[type="text"] { font: inherit; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); width: 100%; }
+  .panel .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+  .panel .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 99px; font-size: 13px; box-shadow: var(--shadow); max-width: calc(100% - 32px); z-index: 5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>아이온<span>2</span> 주간 파티 트래커</h1>
+      <div class="sub" id="sub">불러오는 중…</div>
+    </div>
+    <div class="summary">
+      <div class="meter"><b id="doneCount">0</b><small>/ <span id="totalCount">0</span> 파티 완료</small></div>
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" id="btnReset" class="primary">주간 초기화</button>
+    <button type="button" id="btnSettings">설정</button>
+    <span class="legend" id="legend"></span>
+    <span class="me">체크하는 사람: <b id="meName">-</b> <button type="button" class="ghost" id="btnMe">변경</button></span>
+  </div>
+
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="panel" id="mePanel" hidden>
+    <h2>이름을 알려주세요</h2>
+    <div class="sub">체크한 사람이 누구인지 표시할 때 씁니다. 이 기기에만 저장됩니다.</div>
+    <input type="text" id="meInput" maxlength="12" placeholder="예: 현덕">
+    <div class="actions"><button type="button" id="meYes" class="primary">저장</button></div>
+  </div>
+
+  <div class="panel" id="resetPanel" hidden>
+    <h2>이번 주 완료 체크를 모두 지울까요?</h2>
+    <div class="sub">파티 구성과 캐릭터는 그대로 두고 완료 표시만 해제합니다.</div>
+    <div class="actions"><button type="button" id="resetNo">취소</button><button type="button" id="resetYes" class="primary">모두 초기화</button></div>
+  </div>
+
+  <div class="panel" id="settingsPanel" hidden>
+    <h2>설정</h2>
+    <label>진행 순서 (파티 번호, 화살표나 쉼표로 구분)
+      <input type="text" id="seqInput" placeholder="1->2->3->4->10->5->11->6->12->9->15"></label>
+    <div class="sub">범례 (글자색 이름)</div>
+    <div class="cols">
+      <div class="mrow"><span class="dot t0"></span><input type="text" id="tag0" maxlength="14" placeholder="기본 글자"></div>
+      <div class="mrow"><span class="dot t1"></span><input type="text" id="tag1" maxlength="14" placeholder="분홍 글자"></div>
+      <div class="mrow"><span class="dot t2"></span><input type="text" id="tag2" maxlength="14" placeholder="주황 글자"></div>
+    </div>
+    <div class="actions"><button type="button" id="btnAddGroup" class="ghost">+ 표 추가</button><span style="flex:1"></span><button type="button" id="settingsNo">취소</button><button type="button" id="settingsYes" class="primary">저장</button></div>
+  </div>
+
+  <div class="panel" id="seedPanel" hidden>
+    <h2>데이터가 비어 있습니다</h2>
+    <div class="sub">구글 시트에 있던 루드라 · 침식 · 무스펠 표와 진행 순서를 넣을까요? 한 번만 누르면 됩니다.</div>
+    <div class="actions"><button type="button" id="seedYes" class="primary">시트 데이터 넣기</button></div>
+  </div>
+
+  <div class="top">
+    <div class="card">
+      <h2>진행 순서</h2>
+      <div class="seq" id="seq"></div>
+    </div>
+    <div class="card">
+      <h2>다음 파티</h2>
+      <div class="cur" id="cur"></div>
+    </div>
+  </div>
+
+  <div class="groups" id="groups"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script>
+// ===== Firebase 설정: 콘솔의 firebaseConfig 값을 여기에 넣습니다 =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDB9-NBWnRi_fa6hfpZCI40OG993cxM8pI",
+  authDomain: "aion2-tracker-5d14d.firebaseapp.com",
+  projectId: "aion2-tracker-5d14d",
+  storageBucket: "aion2-tracker-5d14d.firebasestorage.app",
+  messagingSenderId: "104386542268",
+  appId: "1:104386542268:web:86f2b8c0611870fcee2eb9"
+};
+// =====================================================================
+
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const DEFAULT_TAGS = ['본계정', '부계정', '남툴 500k 미만'];
+
+  let db = null;
+  let config = { tagNames: DEFAULT_TAGS.slice(), sequence: [], lastReset: null };
+  let groups = [];
+  let parties = [];
+  let editing = null;
+  let toastTimer = null;
+  let loaded = { groups: false, parties: false };
+  let myName = '';
+  try { myName = localStorage.getItem('aion2.me') || ''; } catch (e) { /* ignore */ }
+
+  // ---------- helpers ----------
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function toast(msg) {
+    let t = document.querySelector('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.remove(), 2200);
+  }
+  function fmtDate(iso) {
+    if (!iso) return ''; const d = new Date(iso); if (isNaN(d)) return '';
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  function showNotice(html, warn) { const n = $('notice'); n.innerHTML = html; n.hidden = !html; n.classList.toggle('warn', !!warn); }
+  const partiesOf = (gid) => parties.filter(p => p.group === gid).sort((a, b) => a.order - b.order);
+  function partiesByNum(num) {
+    const seqGroups = new Set(groups.filter(g => g.inSequence).map(g => g.id));
+    return parties.filter(p => seqGroups.has(p.group) && String(p.num) === String(num));
+  }
+  function doneByNum(num) { const hits = partiesByNum(num); if (!hits.length) return null; return hits.every(p => p.done); }
+  function nextNum() { for (const n of config.sequence) if (doneByNum(n) === false) return n; return null; }
+  function needName() { if (myName) return false; $('mePanel').hidden = false; $('meInput').focus(); toast('먼저 이름을 입력해 주세요'); return true; }
+
+  async function safeWrite(fn, okMsg) {
+    if (!db) { toast('데이터베이스에 연결되지 않았습니다'); return false; }
+    try { await fn(); if (okMsg) toast(okMsg); return true; }
+    catch (e) {
+      console.error(e);
+      if (e && e.code === 'permission-denied') showNotice('쓰기 권한이 없습니다. Firestore 규칙을 확인해 주세요.', true);
+      else toast('저장에 실패했습니다: ' + ((e && e.message) || ''));
+      return false;
+    }
+  }
+
+  // ---------- render ----------
+  function renderSummary() {
+    const total = parties.length, done = parties.filter(p => p.done).length;
+    $('doneCount').textContent = done; $('totalCount').textContent = total;
+    $('bar').style.width = total ? `${Math.round(done / total * 100)}%` : '0';
+    $('sub').textContent = config.lastReset ? `마지막 초기화 ${fmtDate(config.lastReset)} · 체크하면 모두에게 바로 보입니다` : '체크하면 모두에게 바로 보입니다';
+    $('legend').innerHTML = config.tagNames.map((m, i) => `<span class="chip"><span class="dot t${i}"></span>${esc(m)}</span>`).join('');
+    $('meName').textContent = myName || '미설정';
+  }
+
+  function renderSeq() {
+    const el = $('seq'); el.replaceChildren();
+    if (!config.sequence.length) { el.innerHTML = '<span class="hint">설정에서 진행 순서를 입력하세요.</span>'; return; }
+    const nxt = nextNum();
+    config.sequence.forEach((n, i) => {
+      if (i) { const a = document.createElement('span'); a.className = 'arrow'; a.textContent = '→'; el.appendChild(a); }
+      const d = doneByNum(n);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'step' + (d === true ? ' done' : '') + (n === nxt ? ' next' : '');
+      b.textContent = n; b.disabled = !db || d === null;
+      b.title = d === null ? `${n}파티가 표에 없습니다` : d ? '완료 해제' : '완료로 체크';
+      b.addEventListener('click', () => toggleNum(n, !d));
+      el.appendChild(b);
+    });
+    const remaining = config.sequence.filter(n => doneByNum(n) === false).length;
+    const h = document.createElement('span'); h.className = 'hint';
+    h.textContent = remaining ? `${remaining}개 남음 · 번호를 누르면 완료로 체크되고 다음 파티로 넘어갑니다` : '이번 주 순서를 모두 끝냈습니다';
+    el.appendChild(h);
+  }
+
+  function renderCurrent() {
+    const el = $('cur'); const nxt = nextNum();
+    if (nxt === null) {
+      el.innerHTML = config.sequence.length ? '<div class="curdone">이번 주 순서를 모두 끝냈습니다 🎉</div>' : '<div class="sub">진행 순서를 설정하면 다음 파티 조합이 여기 표시됩니다.</div>';
+      return;
+    }
+    const html = [];
+    partiesByNum(nxt).forEach(p => {
+      const g = groups.find(x => x.id === p.group) || { title: '', labels: ['', '', ''] };
+      html.push(`<div class="curhead"><span class="curnum">${esc(p.num)}<small>파티</small></span><span class="curboss">${esc(g.title)}</span></div>`);
+      html.push('<div class="currows">' + g.labels.map((lab, i) => {
+        const c = p.cells[i] || { text: '', tag: null };
+        const cls = (c.tag === 0 || c.tag === 1 || c.tag === 2) ? `t${c.tag}` : '';
+        return `<div class="currow"><span class="pl">${esc(lab)}</span><span class="ch ${cls}">${c.text ? esc(c.text) : '<span class="empty">없음</span>'}</span></div>`;
+      }).join('') + '</div>');
+    });
+    html.push(`<button type="button" class="primary" id="curDone" ${db ? '' : 'disabled'}>${esc(nxt)}파티 완료 체크</button>`);
+    el.innerHTML = html.join('');
+    $('curDone').addEventListener('click', () => toggleNum(nxt, true));
+  }
+
+  function renderGroup(g) {
+    const rows = partiesOf(g.id);
+    const box = document.createElement('section'); box.className = 'group';
+
+    const head = document.createElement('div'); head.className = 'ghead';
+    const title = document.createElement('button'); title.type = 'button'; title.className = 'gtitle'; title.textContent = g.title || '(제목 없음)'; title.title = '표 이름 수정';
+    title.addEventListener('click', () => openEditor({ kind: 'title', gid: g.id }));
+    const cnt = document.createElement('span'); cnt.className = 'gcount'; cnt.textContent = `${rows.filter(p => p.done).length}/${rows.length}`;
+    head.appendChild(title); head.appendChild(cnt);
+    if (editing && editing.kind === 'title' && editing.gid === g.id) {
+      const ed = document.createElement('div'); ed.className = 'editor'; ed.style.width = '100%';
+      ed.innerHTML = `<div class="row"><input class="grow" type="text" maxlength="20"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
+      const inp = ed.querySelector('input'); inp.value = g.title || '';
+      const save = () => saveGroup(g, { title: inp.value.trim() });
+      ed.querySelector('[data-act="save"]').addEventListener('click', save);
+      ed.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') closeEditor(); });
+      head.replaceChildren(ed); setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    }
+    box.appendChild(head);
+
+    const scroll = document.createElement('div'); scroll.className = 'tscroll';
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const htr = document.createElement('tr');
+    htr.innerHTML = `<th class="c-done">완료</th><th class="c-num">파티</th>`;
+    g.labels.forEach((lab, i) => {
+      const th = document.createElement('th');
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'hed'; b.textContent = lab || '(이름 없음)'; b.title = '열 이름 수정';
+      b.addEventListener('click', () => openEditor({ kind: 'label', gid: g.id, idx: i }));
+      th.appendChild(b); htr.appendChild(th);
+    });
+    htr.insertAdjacentHTML('beforeend', '<th class="c-who"></th>');
+    thead.appendChild(htr);
+    if (editing && editing.kind === 'label' && editing.gid === g.id) {
+      const tr = document.createElement('tr'); tr.className = 'edrow';
+      const td = document.createElement('td'); td.colSpan = 3 + g.labels.length;
+      const ed = document.createElement('div'); ed.className = 'editor';
+      ed.innerHTML = `<div class="row"><input class="grow" type="text" maxlength="16" placeholder="플레이어 이름"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
+      const inp = ed.querySelector('input'); inp.value = g.labels[editing.idx] || '';
+      const save = () => { const labels = g.labels.slice(); labels[editing.idx] = inp.value.trim(); saveGroup(g, { labels }); };
+      ed.querySelector('[data-act="save"]').addEventListener('click', save);
+      ed.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') closeEditor(); });
+      td.appendChild(ed); tr.appendChild(td); thead.appendChild(tr);
+      setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    }
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    rows.forEach((p, ri) => {
+      const tr = document.createElement('tr'); tr.className = (p.done ? 'done' : '') + (ri === rows.length - 1 ? ' lastrow' : '');
+      const tdDone = document.createElement('td'); tdDone.className = 'c-done';
+      const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = !!p.done; chk.disabled = !db; chk.setAttribute('aria-label', `${p.num}파티 완료`);
+      chk.addEventListener('change', (ev) => toggleDone(p, ev.target.checked, ev.target));
+      tdDone.appendChild(chk); tr.appendChild(tdDone);
+      const tdNum = document.createElement('td'); tdNum.className = 'c-num'; tdNum.textContent = p.num; tr.appendChild(tdNum);
+      g.labels.forEach((_, i) => {
+        const c = p.cells[i] || { text: '', tag: null };
+        const td = document.createElement('td'); td.className = 'c-cell';
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = (c.tag === 0 || c.tag === 1 || c.tag === 2 ? `t${c.tag}` : '');
+        b.innerHTML = c.text ? esc(c.text) : '<span class="empty">-</span>';
+        b.title = '수정';
+        b.addEventListener('click', () => openEditor({ kind: 'cell', pid: p.id, idx: i }));
+        td.appendChild(b); tr.appendChild(td);
+      });
+      const tdWho = document.createElement('td'); tdWho.className = 'c-who'; tdWho.textContent = p.done ? (p.doneBy || '') : ''; tdWho.title = p.doneAt ? fmtDate(p.doneAt) : '';
+      tr.appendChild(tdWho);
+      tbody.appendChild(tr);
+      if (editing && editing.kind === 'cell' && editing.pid === p.id) {
+        const etr = document.createElement('tr'); etr.className = 'edrow' + (ri === rows.length - 1 ? ' lastrow' : '');
+        const td = document.createElement('td'); td.colSpan = 3 + g.labels.length;
+        td.appendChild(buildCellEditor(p, editing.idx, g)); etr.appendChild(td); tbody.appendChild(etr);
+      }
+    });
+    table.appendChild(tbody);
+    scroll.appendChild(table); box.appendChild(scroll);
+
+    const foot = document.createElement('div'); foot.className = 'gfoot';
+    foot.innerHTML = `<button type="button" class="ghost" data-act="add">+ 파티 추가</button><button type="button" class="ghost danger" data-act="delgroup">표 삭제</button>`;
+    foot.querySelector('[data-act="add"]').addEventListener('click', () => addParty(g));
+    foot.querySelector('[data-act="delgroup"]').addEventListener('click', () => deleteGroup(g, foot));
+    box.appendChild(foot);
+    return box;
+  }
+
+  function buildCellEditor(p, idx, g) {
+    const c = p.cells[idx] || { text: '', tag: null };
+    const ed = document.createElement('div'); ed.className = 'editor';
+    ed.innerHTML = `<div class="row"><span class="sub" style="margin:0">${esc(p.num)}파티 · ${esc(g.labels[idx] || '')}</span></div>
+      <input type="text" maxlength="40" placeholder="캐릭터 (예: 치유(ID쪼꼬)) · 없으면 -">
+      <div class="row picks"></div>
+      <div class="row end"><button type="button" data-act="delparty" class="ghost danger">파티 삭제</button><span class="grow"></span><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
+    const inp = ed.querySelector('input'); inp.value = c.text || '';
+    let tag = (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null;
+    const picks = ed.querySelector('.picks');
+    const drawPicks = () => {
+      picks.innerHTML = `<button type="button" class="pick ${tag === null ? 'on' : ''}" data-tag="n"><span class="dot tn"></span>기본</button>`
+        + config.tagNames.map((m, i) => `<button type="button" class="pick ${tag === i ? 'on' : ''}" data-tag="${i}"><span class="dot t${i}"></span>${esc(m)}</button>`).join('');
+      picks.querySelectorAll('[data-tag]').forEach(b => b.addEventListener('click', () => { tag = b.dataset.tag === 'n' ? null : +b.dataset.tag; drawPicks(); }));
+    };
+    drawPicks();
+    const save = () => saveCell(p, idx, { text: inp.value.trim(), tag });
+    ed.querySelector('[data-act="save"]').addEventListener('click', save);
+    ed.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
+    ed.querySelector('[data-act="delparty"]').addEventListener('click', () => deleteParty(p, ed));
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') closeEditor(); });
+    setTimeout(() => { inp.focus(); inp.select(); }, 0);
+    return ed;
+  }
+
+  function render() {
+    renderSummary(); renderSeq(); renderCurrent();
+    $('btnReset').disabled = !db; $('btnSettings').disabled = !db;
+    const gs = groups.slice().sort((a, b) => a.order - b.order);
+    $('groups').replaceChildren(...gs.map(renderGroup));
+    const empty = loaded.groups && loaded.parties && !groups.length && !parties.length;
+    $('seedPanel').hidden = !(db && empty);
+    if (!gs.length && !empty) {
+      const e = document.createElement('div'); e.className = 'notice'; e.textContent = '데이터를 불러오는 중…';
+      $('groups').appendChild(e);
+    }
+  }
+
+  // ---------- actions ----------
+  function openEditor(e) { if (!db) return; $('settingsPanel').hidden = true; $('resetPanel').hidden = true; editing = e; render(); }
+  function closeEditor() { editing = null; render(); }
+
+  async function saveCell(p, idx, patch) {
+    const cells = [0, 1, 2].map(i => ({ text: (p.cells[i] || {}).text || '', tag: (p.cells[i] || {}).tag ?? null }));
+    cells[idx] = { ...cells[idx], ...patch };
+    if (cells[idx].text === '-') cells[idx].text = '';
+    const ok = await safeWrite(() => db.collection('parties').doc(p.id).update({ cells }));
+    if (ok) { editing = null; p.cells = cells; render(); }
+  }
+  async function saveGroup(g, patch) {
+    const ok = await safeWrite(() => db.collection('groups').doc(g.id).update(patch));
+    if (ok) { editing = null; Object.assign(g, patch); render(); }
+  }
+  function donePatch(done) { return done ? { done: true, doneBy: myName, doneAt: new Date().toISOString() } : { done: false, doneBy: null, doneAt: null }; }
+  async function toggleDone(p, done, input) {
+    if (done && needName()) { input.checked = false; return; }
+    input.disabled = true;
+    const ok = await safeWrite(() => db.collection('parties').doc(p.id).update(donePatch(done)), done ? `${p.num}파티 완료` : `${p.num}파티 완료 해제`);
+    if (!ok) { input.checked = !done; input.disabled = false; }
+  }
+  let seqBusy = false;
+  async function toggleNum(num, done) {
+    if (seqBusy || !db) return;
+    if (done && needName()) return;
+    const hits = partiesByNum(num).filter(p => p.done !== done);
+    if (!hits.length) return;
+    seqBusy = true;
+    const patch = donePatch(done);
+    const batch = db.batch();
+    hits.forEach(p => batch.update(db.collection('parties').doc(p.id), patch));
+    const ok = await safeWrite(() => batch.commit());
+    seqBusy = false;
+    if (ok) {
+      hits.forEach(p => Object.assign(p, patch));
+      const nxt = nextNum();
+      toast(done ? (nxt !== null ? `${num}파티 완료 · 다음은 ${nxt}파티` : `${num}파티 완료 · 이번 주 순서 끝`) : `${num}파티 완료 해제`);
+      render();
+    }
+  }
+  function deleteParty(p, host) {
+    host.innerHTML = `<div class="row end"><span style="color:var(--danger);font-size:13px">${esc(p.num)}파티를 삭제할까요?</span><button type="button" class="ghost" data-act="no">취소</button><button type="button" class="danger" data-act="yes">삭제</button></div>`;
+    host.querySelector('[data-act="no"]').addEventListener('click', closeEditor);
+    host.querySelector('[data-act="yes"]').addEventListener('click', async () => {
+      const ok = await safeWrite(() => db.collection('parties').doc(p.id).delete(), '삭제했습니다');
+      if (ok) editing = null;
+    });
+  }
+  async function addParty(g) {
+    if (!db) return;
+    const rows = partiesOf(g.id);
+    const maxNum = rows.reduce((m, p) => Math.max(m, Number(p.num) || 0), 0);
+    const maxOrder = rows.reduce((m, p) => Math.max(m, Number(p.order) || 0), 0);
+    const id = g.id + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const ok = await safeWrite(() => db.collection('parties').doc(id).set({ group: g.id, order: maxOrder + 1, num: maxNum + 1, cells: [{ text: '', tag: null }, { text: '', tag: null }, { text: '', tag: null }], done: false, doneBy: null, doneAt: null }), `${maxNum + 1}파티 추가`);
+    if (ok) editing = { kind: 'cell', pid: id, idx: 0 };
+  }
+  function deleteGroup(g, foot) {
+    foot.innerHTML = `<span style="color:var(--danger);align-self:center;font-size:13px">"${esc(g.title)}" 표와 파티 ${partiesOf(g.id).length}개를 삭제할까요?</span><button type="button" class="ghost" data-act="no">취소</button><button type="button" class="danger" data-act="yes">삭제</button>`;
+    foot.querySelector('[data-act="no"]').addEventListener('click', render);
+    foot.querySelector('[data-act="yes"]').addEventListener('click', async () => {
+      const batch = db.batch();
+      partiesOf(g.id).forEach(p => batch.delete(db.collection('parties').doc(p.id)));
+      batch.delete(db.collection('groups').doc(g.id));
+      await safeWrite(() => batch.commit(), '표를 삭제했습니다');
+    });
+  }
+  async function addGroup() {
+    if (!db) return;
+    const maxOrder = groups.reduce((m, g) => Math.max(m, Number(g.order) || 0), 0);
+    const labels = groups.length ? groups.slice().sort((a, b) => a.order - b.order)[0].labels.slice() : ['현덕', '계양', '살레'];
+    const id = 'g' + Date.now().toString(36);
+    $('settingsPanel').hidden = true;
+    await safeWrite(() => db.collection('groups').doc(id).set({ order: maxOrder + 1, title: '새 표', labels, inSequence: false }), '표를 추가했습니다');
+  }
+  async function resetWeek() {
+    $('resetPanel').hidden = true;
+    const batch = db.batch();
+    parties.filter(p => p.done).forEach(p => batch.update(db.collection('parties').doc(p.id), donePatch(false)));
+    batch.set(db.collection('config').doc('main'), { ...config, lastReset: new Date().toISOString() });
+    await safeWrite(() => batch.commit(), '이번 주 체크를 초기화했습니다');
+  }
+  function parseSeq(s) { return s.split(/[^0-9]+/).filter(Boolean).map(Number); }
+  async function saveSettings() {
+    const tagNames = [0, 1, 2].map(i => ($('tag' + i).value.trim() || DEFAULT_TAGS[i]).slice(0, 14));
+    const sequence = parseSeq($('seqInput').value);
+    $('settingsPanel').hidden = true;
+    await safeWrite(() => db.collection('config').doc('main').set({ tagNames, sequence, lastReset: config.lastReset }), '설정을 저장했습니다');
+  }
+  function saveMe() {
+    const v = $('meInput').value.trim().slice(0, 12);
+    if (!v) { $('meInput').focus(); return; }
+    myName = v; try { localStorage.setItem('aion2.me', v); } catch (e) { /* ignore */ }
+    $('mePanel').hidden = true; render(); toast(`${v} 님으로 체크합니다`);
+  }
+
+  // ---------- seed (from the Google Sheet) ----------
+  const SEED = {
+    config: { tagNames: DEFAULT_TAGS.slice(), sequence: [1, 2, 3, 4, 10, 5, 11, 6, 12, 9, 15], lastReset: null },
+    groups: {
+      g1: { order: 1, title: '루드라', labels: ['현덕', '계양[네몬]', '살레'], inSequence: true },
+      g2: { order: 2, title: '침식', labels: ['현덕', '웨폰', '살레'], inSequence: true },
+      g3: { order: 3, title: '무스펠', labels: ['현덕', '웨폰', '살레'], inSequence: false },
+    },
+    // [group, num, done, [text, tag] x3]  tag: null=기본 0=본계정 1=부계정 2=남툴 500k 미만
+    parties: [
+      ['g1', 1, false, ['마도', 1], ['궁성', null], ['호법', null]],
+      ['g1', 2, false, ['치유(ID쪼꼬)', 0], ['호법', null], ['정령', null]],
+      ['g1', 3, false, ['호법(ID봄이)', 0], ['치유', null], ['수호', null]],
+      ['g1', 4, false, ['호법(봄봄ol, 부계)', 1], ['수호', null], ['살성', null]],
+      ['g1', 5, false, ['치유(설ol)', 1], ['호법(483,부계)', 1], ['권성(477)', null]],
+      ['g1', 6, false, ['치유(ID별이)', 0], ['살성(458)', 1], ['검성(부계, 444)', 0]],
+      ['g1', 7, false, ['', null], ['검성(449)', 0], ['치유', null]],
+      ['g1', 8, false, ['', null], ['', null], ['마도', null]],
+      ['g2', 9, false, ['마도', 1], ['치유', 2], ['마도', null]],
+      ['g2', 10, false, ['호법(봄봄ol, 부계)', 1], ['호법', 2], ['치유', null]],
+      ['g2', 11, false, ['치유(설ol, 부계)', 1], ['호법(부계)', 1], ['정령', null]],
+      ['g2', 12, false, ['치유(ID별이356)', 0], ['살성', 0], ['검성(부계)', 1]],
+      ['g2', 13, false, ['', null], ['궁성', 2], ['수호', null]],
+      ['g2', 14, false, ['', null], ['검성(503)', 1], ['권성', null]],
+      ['g2', 15, false, ['ID봄이[젠카]', 2], ['수호', null], ['살성', null]],
+      ['g3', 1, false, ['', null], ['호법', null], ['수호', null]],
+      ['g3', 2, true, ['', null], ['수호', null], ['권성', null]],
+      ['g3', 3, true, ['', null], ['호법(부계)', 1], ['검성(부계)', 1]],
+      ['g3', 4, true, ['', null], ['살성', null], ['정령', null]],
+      ['g3', 5, true, ['', null], ['검성', null], ['살성', null]],
+      ['g3', 6, true, ['', null], ['', null], ['마도', null]],
+    ],
+  };
+  async function seed() {
+    $('seedPanel').hidden = true;
+    const batch = db.batch();
+    batch.set(db.collection('config').doc('main'), SEED.config);
+    Object.entries(SEED.groups).forEach(([id, g]) => batch.set(db.collection('groups').doc(id), g));
+    SEED.parties.forEach((r, i) => {
+      const [group, num, done, ...cells] = r;
+      batch.set(db.collection('parties').doc(`${group}-${String(num).padStart(2, '0')}`), {
+        group, num, order: i + 1, done, doneBy: null, doneAt: null,
+        cells: cells.map(([text, tag]) => ({ text, tag })),
+      });
+    });
+    await safeWrite(() => batch.commit(), '시트 데이터를 넣었습니다');
+  }
+
+  // ---------- wiring ----------
+  $('btnReset').addEventListener('click', () => { $('settingsPanel').hidden = true; editing = null; render(); $('resetPanel').hidden = false; });
+  $('resetNo').addEventListener('click', () => { $('resetPanel').hidden = true; });
+  $('resetYes').addEventListener('click', resetWeek);
+  $('btnSettings').addEventListener('click', () => {
+    $('resetPanel').hidden = true; editing = null; render();
+    [0, 1, 2].forEach(i => { $('tag' + i).value = config.tagNames[i] || ''; });
+    $('seqInput').value = config.sequence.join('->');
+    $('settingsPanel').hidden = false;
+  });
+  $('settingsNo').addEventListener('click', () => { $('settingsPanel').hidden = true; });
+  $('settingsYes').addEventListener('click', saveSettings);
+  $('btnAddGroup').addEventListener('click', addGroup);
+  $('btnMe').addEventListener('click', () => { $('meInput').value = myName; $('mePanel').hidden = false; $('meInput').focus(); });
+  $('meYes').addEventListener('click', saveMe);
+  $('meInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveMe(); });
+  $('seedYes').addEventListener('click', seed);
+
+  // ---------- boot ----------
+  render();
+  if (!myName) $('mePanel').hidden = false;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (e) {
+    console.error(e);
+    showNotice('Firebase 설정이 올바르지 않습니다. 페이지 소스의 <code>firebaseConfig</code> 값을 확인해 주세요.', true);
+    render();
+  }
+  if (db) {
+    db.collection('config').doc('main').onSnapshot((snap) => {
+      if (snap.exists) {
+        const d = snap.data();
+        config = {
+          tagNames: Array.isArray(d.tagNames) && d.tagNames.length === 3 ? d.tagNames.map(String) : DEFAULT_TAGS.slice(),
+          sequence: Array.isArray(d.sequence) ? d.sequence.map(Number).filter(n => !isNaN(n)) : [],
+          lastReset: d.lastReset || null,
+        };
+      }
+      render();
+    }, (e) => { console.error(e); showNotice('데이터베이스에 연결하지 못했습니다: ' + esc(e.message), true); });
+
+    db.collection('groups').onSnapshot((snap) => {
+      groups = snap.docs.map(d => {
+        const x = d.data() || {};
+        const labels = Array.isArray(x.labels) ? x.labels.slice(0, 3).map(String) : [];
+        while (labels.length < 3) labels.push('');
+        return { id: d.id, order: Number(x.order) || 0, title: String(x.title ?? ''), labels, inSequence: x.inSequence !== false };
+      });
+      loaded.groups = true;
+      if (editing && editing.gid && !groups.some(g => g.id === editing.gid)) editing = null;
+      render();
+    }, (e) => { console.error(e); showNotice('데이터베이스에 연결하지 못했습니다: ' + esc(e.message), true); });
+
+    db.collection('parties').onSnapshot((snap) => {
+      parties = snap.docs.map(d => {
+        const x = d.data() || {};
+        const cells = Array.isArray(x.cells) ? x.cells.map(c => ({ text: String(c.text ?? ''), tag: (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null })) : [];
+        while (cells.length < 3) cells.push({ text: '', tag: null });
+        return { id: d.id, group: String(x.group ?? ''), order: Number(x.order) || 0, num: x.num ?? '', cells, done: !!x.done, doneBy: x.doneBy || null, doneAt: x.doneAt || null };
+      });
+      loaded.parties = true;
+      if (editing && editing.pid && !parties.some(p => p.id === editing.pid)) editing = null;
+      render();
+    }, (e) => { console.error(e); showNotice('데이터베이스에 연결하지 못했습니다: ' + esc(e.message), true); });
+  }
+})();
+</script>
+</body>
+</html>
