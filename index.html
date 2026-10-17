@@ -274,7 +274,7 @@
         <span class="chip"><span class="dot" style="background:var(--od-extra)"></span>추가 오드 (최대 2,000 · 소모품으로만 충전)</span>
       </span>
     </div>
-    <div class="notice" id="hwNotice">원정·초월 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
+    <div class="notice" id="hwNotice">원정·초월·성역 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 성역은 주간 횟수에 세지 않습니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
     <div class="accounts" id="accounts"></div>
   </section>
 
@@ -827,6 +827,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     { key: 'exp',   label: '원정 어려움',  cost: 60 },
     { key: 'trans', label: '초월 1~3단계', cost: 40 },
     { key: 'trans', label: '초월 4단계',   cost: 60 },
+    { key: 'sanct', label: '성역',         cost: 80 },   // 주간 횟수 제한 없음, 멤버십 2배
   ];
   const TASKS = [
     { key: 'awaken',  label: '각성전',    reset: 'week' },
@@ -880,7 +881,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const before = { od: c.od, odAt: c.odAt, extra: c.extra || 0, counts: { ...(a.counts || {}) }, weekKey: a.weekKey };
     const fromBasic = Math.min(od, cost);
     const newOd = od - fromBasic, newExtra = (c.extra || 0) - (cost - fromBasic);
-    counts[action.key] = (counts[action.key] || 0) + 1;
+    if (QUOTA[action.key]) counts[action.key] = (counts[action.key] || 0) + 1; // 성역은 주간 횟수에 안 셈
     const batch = db.batch();
     batch.update(db.collection('hwChars').doc(c.id), { od: newOd, odAt: now, extra: newExtra });
     batch.update(db.collection('hwAccounts').doc(a.id), { counts, weekKey: weekStart(now) });
@@ -889,7 +890,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     Object.assign(c, { od: newOd, odAt: now, extra: newExtra }); a.counts = counts; a.weekKey = weekStart(now);
     hwUndo = { aid: a.id, cid: c.id, before, label: `${c.name} ${action.label}` };
     renderHw();
-    const over = counts[action.key] > QUOTA[action.key];
+    const over = QUOTA[action.key] && counts[action.key] > QUOTA[action.key];
     toast(`${c.name} · ${action.label} −${cost}${cost - fromBasic ? ` (추가 오드 ${cost - fromBasic})` : ''}${over ? ' · 주간 100% 보상 횟수 초과' : ''}`);
   }
   async function hwUndoLast() {
@@ -1103,7 +1104,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
       const b = document.createElement('button'); b.type = 'button'; b.className = 'spend';
       b.innerHTML = `${esc(act.label)}<small>−${cost}</small>`;
       b.disabled = !db || od + (c.extra || 0) < cost;
-      b.title = od + (c.extra || 0) < cost ? '오드가 부족합니다' : `${act.label}: 오드 ${cost} 소모, ${act.key === 'exp' ? '원정' : '초월'} 횟수 +1`;
+      b.title = od + (c.extra || 0) < cost ? '오드가 부족합니다' : `${act.label}: 오드 ${cost} 소모${act.key === 'exp' ? ', 원정 횟수 +1' : act.key === 'trans' ? ', 초월 횟수 +1' : ''}`;
       b.addEventListener('click', () => hwSpend(a, c, act));
       btns.appendChild(b);
     });
