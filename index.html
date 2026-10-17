@@ -120,6 +120,13 @@
   td.c-cell button:hover { background: var(--surface-2); }
   td.c-cell button.t0 { color: var(--t0); } td.c-cell button.t1 { color: var(--t1); } td.c-cell button.t2 { color: var(--t2); }
   td.c-cell button .empty { color: var(--muted); font-weight: 400; }
+  .pw { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: 1px; }
+  .pw.low { color: var(--t2); }
+  .pw.err { color: var(--danger); }
+  .cur .currow .ch .pw { font-size: 12px; }
+  .editor .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  @media (max-width: 480px) { .editor .two { grid-template-columns: 1fr; } }
+  .editor .hint { font-size: 12px; color: var(--muted); }
   td.c-who { font-size: 11px; color: var(--muted); max-width: 8ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
   tr.edrow td { padding: 0; background: var(--surface-2); height: auto; }
   tr.lastrow td { border-bottom: 0; }
@@ -160,6 +167,7 @@
   <div class="toolbar">
     <button type="button" id="btnReset" class="primary">주간 초기화</button>
     <button type="button" id="btnSettings">설정</button>
+    <button type="button" id="btnPower" title="NC 캐릭터 정보실에서 전투력을 다시 불러옵니다">전투력 갱신</button>
     <span class="legend" id="legend"></span>
     <span class="me">체크하는 사람: <b id="meName">-</b> <button type="button" class="ghost" id="btnMe">변경</button></span>
   </div>
@@ -181,8 +189,8 @@
 
   <div class="panel" id="settingsPanel" hidden>
     <h2>설정</h2>
-    <label>진행 순서 (파티 번호, 화살표나 쉼표로 구분)
-      <input type="text" id="seqInput" placeholder="1->2->3->4->10->5->11->6->12->9->15"></label>
+    <label>진행 순서 (화살표나 쉼표로 구분 · 번호만 쓰면 루드라·침식, 다른 표는 "무1"처럼 보스 이름 앞글자를 붙입니다)
+      <input type="text" id="seqInput" placeholder="1->2->3->4->10->무1->5->11"></label>
     <div class="sub">범례 (글자색 이름)</div>
     <div class="cols">
       <div class="mrow"><span class="dot t0"></span><input type="text" id="tag0" maxlength="14" placeholder="기본 글자"></div>
@@ -211,6 +219,7 @@
 
   <div class="groups" id="groups"></div>
 </div>
+<datalist id="serverList"></datalist>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -225,6 +234,11 @@ const firebaseConfig = {
   appId: "1:104386542268:web:86f2b8c0611870fcee2eb9"
 };
 // =====================================================================
+
+// 전투력 중계 서버 (Vercel, 서울 리전) — NC 공식 캐릭터 정보실에서 읽어옵니다
+const POWER_API = 'https://aion2-power.vercel.app/api/char';
+const LOW_POWER = 500000;            // 이 값 미만이면 "남툴 500k 미만" 색으로 표시
+const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지를 열 때 자동 갱신
 
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -253,11 +267,30 @@ const firebaseConfig = {
   }
   function showNotice(html, warn) { const n = $('notice'); n.innerHTML = html; n.hidden = !html; n.classList.toggle('warn', !!warn); }
   const partiesOf = (gid) => parties.filter(p => p.group === gid).sort((a, b) => a.order - b.order);
-  function partiesByNum(num) {
-    const seqGroups = new Set(groups.filter(g => g.inSequence).map(g => g.id));
-    return parties.filter(p => seqGroups.has(p.group) && String(p.num) === String(num));
+  // 순서 항목: "12" 처럼 번호만 쓰면 루드라·침식(inSequence) 표에서 찾고,
+  // "무1" 처럼 보스 이름 앞글자를 붙이면 그 이름으로 시작하는 표에서 찾습니다.
+  function partiesByNum(tok) {
+    const m = String(tok).match(/^(\D*)(\d+)$/);
+    if (!m) return [];
+    const prefix = m[1], num = m[2];
+    const gs = prefix ? groups.filter(g => (g.title || '').startsWith(prefix)) : groups.filter(g => g.inSequence);
+    const ids = new Set(gs.map(g => g.id));
+    return parties.filter(p => ids.has(p.group) && String(p.num) === num);
   }
   function doneByNum(num) { const hits = partiesByNum(num); if (!hits.length) return null; return hits.every(p => p.done); }
+  function fmtPower(n) { if (n == null) return ''; return n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : Math.round(n / 1000) + 'k'; }
+  // 셀의 표시 색: 전투력을 알고 500k 미만이면 주황(2), 아니면 지정한 태그
+  function cellTag(c) { if (typeof c.power === 'number' && c.power < LOW_POWER) return 2; return (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null; }
+  function powerHtml(c) {
+    if (!c.charName) return '';
+    if (c.powerError) return `<span class="pw err" title="${esc(c.powerError)}">조회 실패</span>`;
+    if (typeof c.power !== 'number') return '<span class="pw">조회 중…</span>';
+    return `<span class="pw ${c.power < LOW_POWER ? 'low' : ''}" title="${esc(c.charName)} · ${esc(c.charServer || '')}${c.className ? ' · ' + esc(c.className) : ''}${c.powerAt ? ' · ' + fmtDate(c.powerAt) : ''}">${fmtPower(c.power)}</span>`;
+  }
+  function cellHtml(c) {
+    const body = c.text ? esc(c.text) : (c.charName ? esc(c.charName) : '<span class="empty">-</span>');
+    return body + powerHtml(c);
+  }
   function nextNum() { for (const n of config.sequence) if (doneByNum(n) === false) return n; return null; }
   function needName() { if (myName) return false; $('mePanel').hidden = false; $('meInput').focus(); toast('먼저 이름을 입력해 주세요'); return true; }
 
@@ -291,7 +324,7 @@ const firebaseConfig = {
       const d = doneByNum(n);
       const b = document.createElement('button'); b.type = 'button'; b.className = 'step' + (d === true ? ' done' : '') + (n === nxt ? ' next' : '');
       b.textContent = n; b.disabled = !db || d === null;
-      b.title = d === null ? `${n}파티가 표에 없습니다` : d ? '완료 해제' : '완료로 체크';
+      b.title = d === null ? `"${n}" 에 해당하는 파티가 표에 없습니다` : d ? '완료 해제' : '완료로 체크';
       b.addEventListener('click', () => toggleNum(n, !d));
       el.appendChild(b);
     });
@@ -313,8 +346,8 @@ const firebaseConfig = {
       html.push(`<div class="curhead"><span class="curnum">${esc(p.num)}<small>파티</small></span><span class="curboss">${esc(g.title)}</span></div>`);
       html.push('<div class="currows">' + g.labels.map((lab, i) => {
         const c = p.cells[i] || { text: '', tag: null };
-        const cls = (c.tag === 0 || c.tag === 1 || c.tag === 2) ? `t${c.tag}` : '';
-        return `<div class="currow"><span class="pl">${esc(lab)}</span><span class="ch ${cls}">${c.text ? esc(c.text) : '<span class="empty">없음</span>'}</span></div>`;
+        const t = cellTag(c); const cls = t === null ? '' : `t${t}`;
+        return `<div class="currow"><span class="pl">${esc(lab)}</span><span class="ch ${cls}">${(c.text || c.charName) ? cellHtml(c) : '<span class="empty">없음</span>'}</span></div>`;
       }).join('') + '</div>');
     });
     html.push(`<button type="button" class="primary" id="curDone" ${db ? '' : 'disabled'}>${esc(nxt)}파티 완료 체크</button>`);
@@ -383,8 +416,8 @@ const firebaseConfig = {
         const c = p.cells[i] || { text: '', tag: null };
         const td = document.createElement('td'); td.className = 'c-cell';
         const b = document.createElement('button'); b.type = 'button';
-        b.className = (c.tag === 0 || c.tag === 1 || c.tag === 2 ? `t${c.tag}` : '');
-        b.innerHTML = c.text ? esc(c.text) : '<span class="empty">-</span>';
+        const t = cellTag(c); b.className = t === null ? '' : `t${t}`;
+        b.innerHTML = cellHtml(c);
         b.title = '수정';
         b.addEventListener('click', () => openEditor({ kind: 'cell', pid: p.id, idx: i }));
         td.appendChild(b); tr.appendChild(td);
@@ -413,10 +446,17 @@ const firebaseConfig = {
     const c = p.cells[idx] || { text: '', tag: null };
     const ed = document.createElement('div'); ed.className = 'editor';
     ed.innerHTML = `<div class="row"><span class="sub" style="margin:0">${esc(p.num)}파티 · ${esc(g.labels[idx] || '')}</span></div>
-      <input type="text" maxlength="40" placeholder="캐릭터 (예: 치유(ID쪼꼬)) · 없으면 -">
+      <input type="text" class="txt" maxlength="40" placeholder="표시 이름 (예: 치유(ID쪼꼬)) · 없으면 -">
+      <div class="two">
+        <input type="text" class="cname" maxlength="20" placeholder="캐릭터명 (전투력 조회용)">
+        <input type="text" class="cserver" maxlength="10" list="serverList" placeholder="서버 (예: 이슈타르)">
+      </div>
+      <div class="hint">캐릭터명과 서버를 넣으면 NC 캐릭터 정보실에서 전투력을 자동으로 가져와 500k 미만이면 주황색으로 표시합니다.${c.charUrl ? ` <a href="${esc(c.charUrl)}" target="_blank" rel="noopener">정보실에서 보기</a>` : ''}</div>
       <div class="row picks"></div>
       <div class="row end"><button type="button" data-act="delparty" class="ghost danger">파티 삭제</button><span class="grow"></span><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
-    const inp = ed.querySelector('input'); inp.value = c.text || '';
+    const inp = ed.querySelector('.txt'); inp.value = c.text || '';
+    const inName = ed.querySelector('.cname'); inName.value = c.charName || '';
+    const inServer = ed.querySelector('.cserver'); inServer.value = c.charServer || '';
     let tag = (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null;
     const picks = ed.querySelector('.picks');
     const drawPicks = () => {
@@ -425,18 +465,18 @@ const firebaseConfig = {
       picks.querySelectorAll('[data-tag]').forEach(b => b.addEventListener('click', () => { tag = b.dataset.tag === 'n' ? null : +b.dataset.tag; drawPicks(); }));
     };
     drawPicks();
-    const save = () => saveCell(p, idx, { text: inp.value.trim(), tag });
+    const save = () => saveCell(p, idx, { text: inp.value.trim(), tag, charName: inName.value.trim(), charServer: inServer.value.trim() });
     ed.querySelector('[data-act="save"]').addEventListener('click', save);
     ed.querySelector('[data-act="cancel"]').addEventListener('click', closeEditor);
     ed.querySelector('[data-act="delparty"]').addEventListener('click', () => deleteParty(p, ed));
-    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') closeEditor(); });
+    [inp, inName, inServer].forEach(el => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') closeEditor(); }));
     setTimeout(() => { inp.focus(); inp.select(); }, 0);
     return ed;
   }
 
   function render() {
     renderSummary(); renderSeq(); renderCurrent();
-    $('btnReset').disabled = !db; $('btnSettings').disabled = !db;
+    $('btnReset').disabled = !db; $('btnSettings').disabled = !db; $('btnPower').disabled = !db || powerBusy;
     const gs = groups.slice().sort((a, b) => a.order - b.order);
     $('groups').replaceChildren(...gs.map(renderGroup));
     const empty = loaded.groups && loaded.parties && !groups.length && !parties.length;
@@ -451,12 +491,73 @@ const firebaseConfig = {
   function openEditor(e) { if (!db) return; $('settingsPanel').hidden = true; $('resetPanel').hidden = true; editing = e; render(); }
   function closeEditor() { editing = null; render(); }
 
+  function cleanCell(c) {
+    c = c || {};
+    const out = { text: c.text || '', tag: (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null };
+    if (c.charName) {
+      out.charName = c.charName; out.charServer = c.charServer || '';
+      if (typeof c.power === 'number') { out.power = c.power; out.powerAt = c.powerAt || null; out.className = c.className || null; out.charUrl = c.charUrl || null; }
+      if (c.powerError) out.powerError = c.powerError;
+    }
+    return out;
+  }
   async function saveCell(p, idx, patch) {
-    const cells = [0, 1, 2].map(i => ({ text: (p.cells[i] || {}).text || '', tag: (p.cells[i] || {}).tag ?? null }));
-    cells[idx] = { ...cells[idx], ...patch };
-    if (cells[idx].text === '-') cells[idx].text = '';
+    const cells = [0, 1, 2].map(i => cleanCell(p.cells[i]));
+    const prev = cells[idx];
+    const next = { ...prev, ...patch };
+    if (next.text === '-') next.text = '';
+    // 캐릭터명/서버가 바뀌면 이전 전투력은 버리고 다시 조회
+    if (next.charName !== prev.charName || next.charServer !== prev.charServer) { delete next.power; delete next.powerAt; delete next.className; delete next.charUrl; delete next.powerError; }
+    cells[idx] = cleanCell(next);
     const ok = await safeWrite(() => db.collection('parties').doc(p.id).update({ cells }));
-    if (ok) { editing = null; p.cells = cells; render(); }
+    if (ok) { editing = null; p.cells = cells; render(); if (cells[idx].charName && typeof cells[idx].power !== 'number') refreshPowers(false); }
+  }
+
+  // ---------- 전투력 조회 ----------
+  let powerBusy = false;
+  async function fetchPower(c) {
+    const r = await fetch(`${POWER_API}?name=${encodeURIComponent(c.charName)}&server=${encodeURIComponent(c.charServer || '')}`);
+    const j = await r.json().catch(() => ({ ok: false, error: `응답 오류 ${r.status}` }));
+    if (!j.ok) throw new Error(j.error || `응답 오류 ${r.status}`);
+    return j;
+  }
+  async function refreshPowers(force) {
+    if (!db || powerBusy) return;
+    const now = Date.now();
+    const targets = [];
+    parties.forEach(p => p.cells.forEach((c, i) => {
+      if (!c.charName) return;
+      const stale = !c.powerAt || (now - new Date(c.powerAt).getTime()) > POWER_STALE_MS;
+      if (force || typeof c.power !== 'number' || stale) targets.push({ p, i });
+    }));
+    if (!targets.length) { if (force) toast('조회할 캐릭터가 없습니다. 칸을 눌러 캐릭터명과 서버를 넣어주세요.'); return; }
+    powerBusy = true; $('btnPower').disabled = true;
+    let okCount = 0, failCount = 0;
+    try {
+      for (const { p, i } of targets) {
+        const c = p.cells[i];
+        const cells = [0, 1, 2].map(k => cleanCell(p.cells[k]));
+        try {
+          const j = await fetchPower(c);
+          cells[i] = cleanCell({ ...cells[i], power: j.combatPower, powerAt: new Date().toISOString(), className: j.className, charUrl: j.url, powerError: null });
+          okCount++;
+        } catch (e) {
+          cells[i] = cleanCell({ ...cells[i], powerError: String(e.message || e) });
+          failCount++;
+        }
+        try { await db.collection('parties').doc(p.id).update({ cells }); p.cells = cells; } catch (e) { console.error(e); }
+      }
+    } finally {
+      powerBusy = false; $('btnPower').disabled = !db;
+      render();
+      if (force || failCount) toast(`전투력 갱신: 성공 ${okCount}${failCount ? `, 실패 ${failCount}` : ''}`);
+    }
+  }
+  async function loadServerList() {
+    try {
+      const r = await fetch(`${POWER_API}?servers=1`); const j = await r.json();
+      if (j.ok) $('serverList').innerHTML = j.servers.map(s => `<option value="${esc(s.name)}">${s.race === 1 ? '천족' : '마족'}</option>`).join('');
+    } catch (e) { /* 서버 목록은 편의 기능이라 실패해도 무시 */ }
   }
   async function saveGroup(g, patch) {
     const ok = await safeWrite(() => db.collection('groups').doc(g.id).update(patch));
@@ -530,7 +631,9 @@ const firebaseConfig = {
     batch.set(db.collection('config').doc('main'), { ...config, lastReset: new Date().toISOString() });
     await safeWrite(() => batch.commit(), '이번 주 체크를 초기화했습니다');
   }
-  function parseSeq(s) { return s.split(/[^0-9]+/).filter(Boolean).map(Number); }
+  function parseSeq(s) {
+    return s.split(/\s*(?:->|→|>|,|\/|\s)\s*/).map(t => t.trim()).filter(t => /^\D*\d+$/.test(t));
+  }
   async function saveSettings() {
     const tagNames = [0, 1, 2].map(i => ($('tag' + i).value.trim() || DEFAULT_TAGS[i]).slice(0, 14));
     const sequence = parseSeq($('seqInput').value);
@@ -546,7 +649,7 @@ const firebaseConfig = {
 
   // ---------- seed (from the Google Sheet) ----------
   const SEED = {
-    config: { tagNames: DEFAULT_TAGS.slice(), sequence: [1, 2, 3, 4, 10, 5, 11, 6, 12, 9, 15], lastReset: null },
+    config: { tagNames: DEFAULT_TAGS.slice(), sequence: ['1', '2', '3', '4', '10', '5', '11', '6', '12', '9', '15'], lastReset: null },
     groups: {
       g1: { order: 1, title: '루드라', labels: ['현덕', '계양[네몬]', '살레'], inSequence: true },
       g2: { order: 2, title: '침식', labels: ['현덕', '웨폰', '살레'], inSequence: true },
@@ -609,6 +712,7 @@ const firebaseConfig = {
   $('meYes').addEventListener('click', saveMe);
   $('meInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveMe(); });
   $('seedYes').addEventListener('click', seed);
+  $('btnPower').addEventListener('click', () => refreshPowers(true));
 
   // ---------- boot ----------
   render();
@@ -627,7 +731,7 @@ const firebaseConfig = {
         const d = snap.data();
         config = {
           tagNames: Array.isArray(d.tagNames) && d.tagNames.length === 3 ? d.tagNames.map(String) : DEFAULT_TAGS.slice(),
-          sequence: Array.isArray(d.sequence) ? d.sequence.map(Number).filter(n => !isNaN(n)) : [],
+          sequence: Array.isArray(d.sequence) ? d.sequence.map(String).filter(t => /^\D*\d+$/.test(t)) : [],
           lastReset: d.lastReset || null,
         };
       }
@@ -649,14 +753,17 @@ const firebaseConfig = {
     db.collection('parties').onSnapshot((snap) => {
       parties = snap.docs.map(d => {
         const x = d.data() || {};
-        const cells = Array.isArray(x.cells) ? x.cells.map(c => ({ text: String(c.text ?? ''), tag: (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null })) : [];
+        const cells = Array.isArray(x.cells) ? x.cells.map(c => cleanCell({ ...c, text: String(c.text ?? '') })) : [];
         while (cells.length < 3) cells.push({ text: '', tag: null });
         return { id: d.id, group: String(x.group ?? ''), order: Number(x.order) || 0, num: x.num ?? '', cells, done: !!x.done, doneBy: x.doneBy || null, doneAt: x.doneAt || null };
       });
+      const first = !loaded.parties;
       loaded.parties = true;
       if (editing && editing.pid && !parties.some(p => p.id === editing.pid)) editing = null;
       render();
+      if (first) setTimeout(() => refreshPowers(false), 500); // 페이지를 열 때 오래된 전투력만 자동 갱신
     }, (e) => { console.error(e); showNotice('데이터베이스에 연결하지 못했습니다: ' + esc(e.message), true); });
+    loadServerList();
   }
 })();
 </script>
