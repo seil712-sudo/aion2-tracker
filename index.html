@@ -190,25 +190,26 @@
   .char:last-child { border-bottom: 0; }
   @media (max-width: 900px) { .char { grid-template-columns: minmax(150px, 1fr) minmax(230px, 2fr); } .char .tasks { grid-column: 1 / -1; } }
   @media (max-width: 560px) { .char { grid-template-columns: 1fr; } }
-  .who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-  .who .hnm { font-weight: 700; font-size: 15px; }
+  .who { display: grid; gap: 1px; min-width: 0; }
+  .who .top { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+  .who .hnm { font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .who .hnm .sv { font-size: 11px; font-weight: 500; opacity: .7; margin-left: 3px; }
-  .who .meta { font-size: 12px; color: var(--muted); }
+  .who .meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .who.low .hnm, .who.low .meta { color: var(--t2); }
   .who .meta.err { color: var(--danger); }
-  .who .edit-btn { font-size: 11px; padding: 0 4px; }
-  .od { display: grid; gap: 3px; }
-  .odnum { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
-  .odnum b { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 20px; color: var(--od); line-height: 1; }
-  .odnum .ex { color: var(--od-extra); font-weight: 700; }
-  .odnum .max { color: var(--muted); }
-  .odnum .next { color: var(--muted); font-size: 12px; margin-left: auto; }
+  .who .edit-btn { font-size: 11px; padding: 0 4px; flex: none; }
+  .od { display: grid; gap: 3px; min-width: 0; }
+  .odnum { display: flex; align-items: baseline; gap: 5px; font-variant-numeric: tabular-nums; flex-wrap: nowrap; min-width: 0; font-size: 13px; }
+  .odnum b { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 18px; color: var(--od); line-height: 1; flex: none; }
+  .odnum .ex { color: var(--od-extra); font-weight: 700; flex: none; }
+  .odnum .max { color: var(--muted); font-size: 12px; flex: none; }
+  .odnum .next { color: var(--muted); font-size: 11px; margin-left: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; display: inline-flex; align-items: baseline; gap: 5px; }
   .odnum .next.full { color: var(--done); }
-  .odnum .src { display: inline-block; font-size: 10px; font-weight: 700; color: var(--od); border: 1px solid var(--od); border-radius: 99px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
+  .odnum .src { display: inline-block; font-size: 10px; font-weight: 700; color: var(--od); border: 1px solid var(--od); border-radius: 99px; padding: 0 5px; flex: none; line-height: 14px; }
   .odnum .edit { cursor: text; border-radius: 4px; padding: 0 3px; margin: 0 -3px; border-bottom: 1px dashed transparent; }
   .odnum .edit:hover { background: var(--surface-2); border-bottom-color: currentColor; }
   .odnum input.odin { font: inherit; width: 5.5em; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--text); font-variant-numeric: tabular-nums; }
-  .odnum input.odin.big { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 20px; color: var(--od); width: 4em; }
+  .odnum input.odin.big { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 18px; color: var(--od); width: 4em; }
   .odnum input.odin.ex { color: var(--od-extra); font-weight: 700; }
   .bars { display: grid; gap: 3px; }
   .obar { height: 8px; border-radius: 99px; background: var(--od-bg); overflow: hidden; }
@@ -1050,14 +1051,14 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     else if (c.powerError) meta = `<div class="meta err" title="${esc(c.powerError)}">전투력 조회 실패</div>`;
     else if (typeof c.power !== 'number') meta = '<div class="meta">전투력 조회 중…</div>';
     else meta = `<div class="meta" title="${c.powerAt ? fmtDate(c.powerAt) + ' 조회' : ''}">${c.cls ? esc(c.cls) + ' · ' : ''}${fmtPower(c.power)}</div>`;
-    who.innerHTML = `<div class="hnm">${c.name ? esc(c.name) : '<span style="color:var(--muted)">이름 없음</span>'}${c.server ? `<span class="sv">[${esc(sv)}]</span>` : ''}</div>${meta}
-      <button type="button" class="ghost edit-btn" data-act="edit" title="캐릭터 수정">수정</button>`;
+    who.innerHTML = `<div class="top"><div class="hnm" title="${esc(c.name || '')}${c.server ? ' · ' + esc(c.server) : ''}">${c.name ? esc(c.name) : '<span style="color:var(--muted)">이름 없음</span>'}${c.server ? `<span class="sv">[${esc(sv)}]</span>` : ''}</div>
+      <button type="button" class="ghost edit-btn" data-act="edit" title="캐릭터 수정">수정</button></div>${meta}`;
     who.querySelector('[data-act="edit"]').addEventListener('click', () => { hwEditing = { aid: a.id, cid: c.id }; renderHw(); });
     row.appendChild(who);
 
     const odBox = document.createElement('div'); odBox.className = 'od';
-    const srcTxt = c.odSource === 'notmeter' && c.odAt ? `<span class="src" title="낫미터에서 ${fmtDate(new Date(tsOf(c.odAt)).toISOString())} 에 읽은 값 기준">낫미터 연동</span>` : '';
-    const nextTxt = od >= OD_MAX ? `<span class="next full">${srcTxt}기본 오드 가득 참</span>` : `<span class="next">${srcTxt}다음 충전 +${rate} · ${fmtLeft(nextTickAt(now) - now)} 후 (${fmtKst(nextTickAt(now))})</span>`;
+    const srcTxt = c.odSource === 'notmeter' && c.odAt ? `<span class="src" title="낫미터에서 ${fmtDate(new Date(tsOf(c.odAt)).toISOString())} 에 읽은 값 기준">낫미터</span>` : '';
+    const nextTxt = od >= OD_MAX ? `<span class="next full">${srcTxt}<span>가득 참</span></span>` : `<span class="next" title="다음 충전 ${fmtKst(nextTickAt(now))} (+${rate})">${srcTxt}<span>+${rate} · ${fmtLeft(nextTickAt(now) - now)} 후 (${fmtKst(nextTickAt(now))})</span></span>`;
     const edOd = odEditing && odEditing.cid === c.id && odEditing.field === 'od';
     const edEx = odEditing && odEditing.cid === c.id && odEditing.field === 'extra';
     const basicHtml = edOd ? `<input class="odin big" type="number" min="0" max="${OD_MAX}" step="1" value="${od}" aria-label="기본 오드">` : `<b class="edit" title="누르면 기본 오드를 직접 입력" tabindex="0" role="button">${fmtN(od)}</b>`;
