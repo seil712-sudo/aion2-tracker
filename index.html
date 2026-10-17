@@ -173,6 +173,8 @@
   .acchead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
   .acctitle { font-weight: 700; font-size: 16px; background: transparent; border: 0; padding: 2px 6px; border-radius: 4px; text-align: left; }
   .acctitle:hover { background: var(--surface); }
+  .owner { font-size: 12px; color: var(--muted); padding: 2px 8px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); }
+  .owner.me { color: var(--accent); border-color: var(--accent); }
   .quota { display: flex; align-items: center; gap: 8px; font-size: 13px; font-variant-numeric: tabular-nums; }
   .quota .lab { color: var(--muted); }
   .quota .qbar { width: 110px; height: 8px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
@@ -266,12 +268,13 @@
   <section class="pane" id="paneHw" hidden>
     <div class="toolbar">
       <button type="button" class="primary" id="btnAddAcc">+ 계정 추가</button>
+      <button type="button" id="btnHwScope" title="내 이름으로 등록된 계정만 볼지, 전체를 볼지 전환합니다">전체 보기</button>
       <span class="legend">
         <span class="chip"><span class="dot" style="background:var(--od)"></span>기본 오드 (최대 840 · 3시간마다 +10, 멤버십 계정 +15)</span>
         <span class="chip"><span class="dot" style="background:var(--od-extra)"></span>추가 오드 (최대 2,000 · 소모품으로만 충전)</span>
       </span>
     </div>
-    <div class="notice">원정·초월 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
+    <div class="notice" id="hwNotice">원정·초월 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
     <div class="accounts" id="accounts"></div>
   </section>
 
@@ -762,7 +765,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const v = $('meInput').value.trim().slice(0, 12);
     if (!v) { $('meInput').focus(); return; }
     myName = v; try { localStorage.setItem('aion2.me', v); } catch (e) { /* ignore */ }
-    $('mePanel').hidden = true; render(); toast(`${v} 님으로 체크합니다`);
+    $('mePanel').hidden = true; render(); renderHw(); toast(`${v} 님으로 체크합니다`);
   }
 
   // ---------- seed (from the Google Sheet) ----------
@@ -855,6 +858,8 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   const tsOf = (v) => (v == null ? 0 : (typeof v === 'number' ? v : (Date.parse(v) || 0)));
 
   let hwAccounts = [], hwChars = [];
+  let hwScopeAll = false; // false = 내 계정만, true = 전체 보기
+  try { hwScopeAll = localStorage.getItem('aion2.hwScope') === 'all'; } catch (e) { /* ignore */ }
   let hwEditing = null;   // {aid, kind:'title'} | {aid, cid}
   let odEditing = null;   // {cid, field}
   let hwUndo = null;      // {aid, cid, before:{od, odAt, extra, counts}, label}
@@ -925,9 +930,10 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   }
   async function hwAddAccount() {
     if (!db) return;
+    if (needName()) return; // 계정 주인을 기록하려면 이름이 필요
     const maxOrder = hwAccounts.reduce((m, a) => Math.max(m, a.order || 0), 0);
     const id = 'acc' + Date.now().toString(36);
-    const ok = await safeWrite(() => db.collection('hwAccounts').doc(id).set({ order: maxOrder + 1, title: '새 계정', member: false, counts: { exp: 0, trans: 0 }, weekKey: weekStart(Date.now()) }));
+    const ok = await safeWrite(() => db.collection('hwAccounts').doc(id).set({ order: maxOrder + 1, title: myName, owner: myName, member: false, counts: { exp: 0, trans: 0 }, weekKey: weekStart(Date.now()) }));
     if (ok) hwEditing = { aid: id, kind: 'title' };
   }
   async function hwAddChar(a) {
@@ -981,17 +987,29 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const now = Date.now();
     const root = $('accounts'); root.replaceChildren();
     $('btnAddAcc').disabled = !db;
-    const accs = hwAccounts.slice().sort((a, b) => a.order - b.order);
-    accs.forEach(a => root.appendChild(renderAccount(a, now)));
-    if (!accs.length) { const e = document.createElement('div'); e.className = 'notice'; e.textContent = hwLoaded.acc ? '계정이 없습니다. "+ 계정 추가"를 눌러 시작하세요.' : '데이터를 불러오는 중…'; root.appendChild(e); }
+    const scopeAll = hwScopeAll || !myName;
+    $('btnHwScope').textContent = scopeAll ? '내 계정만 보기' : '전체 보기';
+    $('btnHwScope').disabled = !myName;
+    const all = hwAccounts.slice().sort((a, b) => a.order - b.order);
+    const accs = scopeAll ? all : all.filter(a => (a.owner || '') === myName);
+    accs.forEach(a => root.appendChild(renderAccount(a, now, scopeAll)));
+    if (!accs.length) {
+      const e = document.createElement('div'); e.className = 'notice';
+      if (!hwLoaded.acc) e.textContent = '데이터를 불러오는 중…';
+      else if (!myName) e.textContent = '상단에서 이름을 먼저 입력하면 내 계정만 따로 볼 수 있습니다.';
+      else if (!scopeAll && all.length) e.textContent = `"${myName}" 이름으로 등록된 계정이 없습니다. "+ 계정 추가"를 누르거나 "전체 보기"로 다른 사람 계정을 볼 수 있습니다.`;
+      else e.textContent = '계정이 없습니다. "+ 계정 추가"를 눌러 시작하세요.';
+      root.appendChild(e);
+    }
   }
-  function renderAccount(a, now) {
+  function renderAccount(a, now, scopeAll) {
     const counts = effCounts(a, now);
     const box = document.createElement('section'); box.className = 'acc';
     const head = document.createElement('div'); head.className = 'acchead';
-    const title = document.createElement('button'); title.type = 'button'; title.className = 'acctitle'; title.textContent = a.title || '(이름 없음)'; title.title = '계정 이름 수정';
+    const title = document.createElement('button'); title.type = 'button'; title.className = 'acctitle'; title.textContent = a.title || '(이름 없음)'; title.title = '계정 이름 · 주인 수정';
     title.addEventListener('click', () => { hwEditing = { aid: a.id, kind: 'title' }; renderHw(); });
     head.appendChild(title);
+    if (scopeAll) { const o = document.createElement('span'); o.className = 'owner' + ((a.owner || '') === myName && myName ? ' me' : ''); o.textContent = a.owner ? `${a.owner}${(a.owner === myName) ? ' (나)' : ''}` : '주인 미지정'; head.appendChild(o); }
     [['원정', 'exp'], ['초월', 'trans']].forEach(([lab, k]) => {
       const n = counts[k] || 0, max = QUOTA[k];
       const q = document.createElement('div'); q.className = 'quota';
@@ -1006,12 +1024,17 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     if (hwUndo && hwUndo.aid === a.id) { const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = `↶ 되돌리기 (${hwUndo.label})`; u.addEventListener('click', hwUndoLast); head.appendChild(u); }
     if (hwEditing && hwEditing.aid === a.id && hwEditing.kind === 'title') {
       const ed = document.createElement('div'); ed.className = 'heditor'; ed.style.width = '100%';
-      ed.innerHTML = `<div class="row"><input class="grow" type="text" maxlength="20" placeholder="계정 이름"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
-      const inp = ed.querySelector('input'); inp.value = a.title || '';
-      const saveT = async () => { const title = inp.value.trim(); hwEditing = null; const ok = await safeWrite(() => db.collection('hwAccounts').doc(a.id).update({ title })); if (ok) { a.title = title; renderHw(); } };
+      ed.innerHTML = `<div class="two">
+          <label>계정 이름 <input type="text" class="atitle" maxlength="20" placeholder="예: 본계정, 부계정"></label>
+          <label>주인 (상단에 입력하는 이름과 같아야 "내 계정"으로 보입니다) <input type="text" class="aowner" maxlength="12" placeholder="예: 현덕"></label>
+        </div>
+        <div class="row end"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
+      const inp = ed.querySelector('.atitle'); inp.value = a.title || '';
+      const own = ed.querySelector('.aowner'); own.value = a.owner || myName || '';
+      const saveT = async () => { const title = inp.value.trim(), owner = own.value.trim(); hwEditing = null; const ok = await safeWrite(() => db.collection('hwAccounts').doc(a.id).update({ title, owner })); if (ok) { a.title = title; a.owner = owner; renderHw(); } };
       ed.querySelector('[data-act="save"]').addEventListener('click', saveT);
       ed.querySelector('[data-act="cancel"]').addEventListener('click', () => { hwEditing = null; renderHw(); });
-      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveT(); if (e.key === 'Escape') { hwEditing = null; renderHw(); } });
+      [inp, own].forEach(el => el.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveT(); if (e.key === 'Escape') { hwEditing = null; renderHw(); } }));
       head.replaceChildren(ed); setTimeout(() => { inp.focus(); inp.select(); }, 0);
     }
     box.appendChild(head);
@@ -1145,6 +1168,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   $('tabHw').addEventListener('click', () => showTab('hw'));
   $('tabParty').addEventListener('click', () => showTab('party'));
   $('btnAddAcc').addEventListener('click', hwAddAccount);
+  $('btnHwScope').addEventListener('click', () => { hwScopeAll = !hwScopeAll; try { localStorage.setItem('aion2.hwScope', hwScopeAll ? 'all' : 'mine'); } catch (e) { /* ignore */ } renderHw(); });
   try { showTab(localStorage.getItem('aion2.tab') === 'hw' ? 'hw' : 'party'); } catch (e) { showTab('party'); }
   renderClock();
   setInterval(() => { renderClock(); if (!odEditing && !hwEditing) renderHw(); }, 30000);
@@ -1221,7 +1245,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
 
     // 숙제 탭 데이터
     db.collection('hwAccounts').onSnapshot((snap) => {
-      hwAccounts = snap.docs.map(d => { const x = d.data() || {}; return { id: d.id, order: Number(x.order) || 0, title: String(x.title ?? ''), member: !!x.member, counts: x.counts || { exp: 0, trans: 0 }, weekKey: x.weekKey ?? null }; });
+      hwAccounts = snap.docs.map(d => { const x = d.data() || {}; return { id: d.id, order: Number(x.order) || 0, title: String(x.title ?? ''), owner: String(x.owner ?? ''), member: !!x.member, counts: x.counts || { exp: 0, trans: 0 }, weekKey: x.weekKey ?? null }; });
       hwLoaded.acc = true;
       if (hwEditing && hwEditing.aid && !hwAccounts.some(a => a.id === hwEditing.aid)) hwEditing = null;
       renderHw();
