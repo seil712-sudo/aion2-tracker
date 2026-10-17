@@ -201,6 +201,7 @@
   .odnum .max { color: var(--muted); }
   .odnum .next { color: var(--muted); font-size: 12px; margin-left: auto; }
   .odnum .next.full { color: var(--done); }
+  .odnum .src { display: inline-block; font-size: 10px; font-weight: 700; color: var(--od); border: 1px solid var(--od); border-radius: 99px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
   .odnum .edit { cursor: text; border-radius: 4px; padding: 0 3px; margin: 0 -3px; border-bottom: 1px dashed transparent; }
   .odnum .edit:hover { background: var(--surface-2); border-bottom-color: currentColor; }
   .odnum input.odin { font: inherit; width: 5.5em; padding: 1px 6px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--text); font-variant-numeric: tabular-nums; }
@@ -223,6 +224,12 @@
   .task input { width: 18px; height: 18px; accent-color: var(--done); margin: 0; cursor: pointer; }
   .task .r { color: var(--muted); font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
   .task.done span.t { color: var(--done); text-decoration: line-through; }
+  .tickets { display: grid; gap: 4px; padding-bottom: 6px; margin-bottom: 2px; border-bottom: 1px dashed var(--line); }
+  .ticket { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+  .ticket .tv { margin-left: auto; display: inline-flex; align-items: baseline; gap: 3px; font-variant-numeric: tabular-nums; }
+  .ticket .tv b { font-size: 15px; color: var(--od); }
+  .ticket .tv b.bonus { color: var(--od-extra); margin-left: 6px; }
+  .ticket .tv small { font-size: 10px; color: var(--muted); }
   .accfoot { display: flex; justify-content: flex-end; gap: 4px; padding: 4px 6px; border-top: 1px solid var(--line); }
   .heditor { grid-column: 1 / -1; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; }
   .heditor .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -1075,7 +1082,8 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     row.appendChild(who);
 
     const odBox = document.createElement('div'); odBox.className = 'od';
-    const nextTxt = od >= OD_MAX ? '<span class="next full">기본 오드 가득 참</span>' : `<span class="next">다음 충전 +${rate} · ${fmtLeft(nextTickAt(now) - now)} 후 (${fmtKst(nextTickAt(now))})</span>`;
+    const srcTxt = c.odSource === 'notmeter' && c.odAt ? `<span class="src" title="낫미터에서 ${fmtDate(new Date(tsOf(c.odAt)).toISOString())} 에 읽은 값 기준">낫미터 연동</span>` : '';
+    const nextTxt = od >= OD_MAX ? `<span class="next full">${srcTxt}기본 오드 가득 참</span>` : `<span class="next">${srcTxt}다음 충전 +${rate} · ${fmtLeft(nextTickAt(now) - now)} 후 (${fmtKst(nextTickAt(now))})</span>`;
     const edOd = odEditing && odEditing.cid === c.id && odEditing.field === 'od';
     const edEx = odEditing && odEditing.cid === c.id && odEditing.field === 'extra';
     const basicHtml = edOd ? `<input class="odin big" type="number" min="0" max="${OD_MAX}" step="1" value="${od}" aria-label="기본 오드">` : `<b class="edit" title="누르면 기본 오드를 직접 입력" tabindex="0" role="button">${fmtN(od)}</b>`;
@@ -1119,6 +1127,14 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     row.appendChild(odBox);
 
     const tasks = document.createElement('div'); tasks.className = 'tasks';
+    // 낫미터에서 읽은 악몽·각성전 입장권 (기본 / 추가)
+    const ticketRow = (label, base, bonus, at) => {
+      if (base == null && bonus == null) return '';
+      const when = at ? fmtDate(new Date(tsOf(at)).toISOString()) : '';
+      return `<div class="ticket" title="낫미터 기준${when ? ' · ' + when + ' 읽음' : ''}"><span class="t">${label} 입장권</span><span class="tv"><b>${base ?? 0}</b><small>기본</small><b class="bonus">+${bonus ?? 0}</b><small>추가</small></span></div>`;
+    };
+    const ticketsHtml = ticketRow('악몽', c.nmBase, c.nmBonus, c.nmAt) + ticketRow('각성전', c.awBase, c.awBonus, c.awAt);
+    if (ticketsHtml) { const tb = document.createElement('div'); tb.className = 'tickets'; tb.innerHTML = ticketsHtml; tasks.appendChild(tb); }
     TASKS.forEach(t => {
       const done = taskDone(c, t, now);
       const l = document.createElement('label'); l.className = 'task' + (done ? ' done' : '');
