@@ -120,10 +120,16 @@
   td.c-cell button:hover { background: var(--surface-2); }
   td.c-cell button.t0 { color: var(--t0); } td.c-cell button.t1 { color: var(--t1); } td.c-cell button.t2 { color: var(--t2); }
   td.c-cell button .empty { color: var(--muted); font-weight: 400; }
-  .pw { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; vertical-align: 1px; }
-  .pw.low { color: var(--t2); }
-  .pw.err { color: var(--danger); }
-  .cur .currow .ch .pw { font-size: 12px; }
+  /* 두 줄 셀: 윗줄 캐릭터명 [서버], 아랫줄 직업 · 전투력 */
+  td.c-cell button { line-height: 1.25; padding: 5px 6px 6px; }
+  .nm { display: block; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nm .sv { font-size: 11px; font-weight: 500; opacity: .7; margin-left: 3px; }
+  .sub { display: block; font-size: 11px; font-weight: 500; margin-top: 1px; opacity: .85; font-variant-numeric: tabular-nums; }
+  .sub.none { color: var(--muted); opacity: 1; font-weight: 400; }
+  .sub.err { color: var(--danger); opacity: 1; }
+  tr.done td.c-cell button .nm, tr.done td.c-cell button .sub { text-decoration: line-through; }
+  .cur .currow .ch .nm { font-size: 15px; }
+  .cur .currow .ch .sub { font-size: 12px; }
   .editor .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   @media (max-width: 480px) { .editor .two { grid-template-columns: 1fr; } }
   .editor .hint { font-size: 12px; color: var(--muted); }
@@ -281,15 +287,24 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   function fmtPower(n) { if (n == null) return ''; return n >= 1000000 ? (n / 1000000).toFixed(2) + 'M' : Math.round(n / 1000) + 'k'; }
   // 셀의 표시 색: 전투력을 알고 500k 미만이면 주황(2), 아니면 지정한 태그
   function cellTag(c) { if (typeof c.power === 'number' && c.power < LOW_POWER) return 2; return (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null; }
-  function powerHtml(c) {
-    if (!c.charName) return '';
-    if (c.powerError) return `<span class="pw err" title="${esc(c.powerError)}">조회 실패</span>`;
-    if (typeof c.power !== 'number') return '<span class="pw">조회 중…</span>';
-    return `<span class="pw ${c.power < LOW_POWER ? 'low' : ''}" title="${esc(c.charName)} · ${esc(c.charServer || '')}${c.className ? ' · ' + esc(c.className) : ''}${c.powerAt ? ' · ' + fmtDate(c.powerAt) : ''}">${fmtPower(c.power)}</span>`;
+  let serverShorts = {}; // 서버 전체 이름 → 2글자 약칭 (NC 서버 목록에서)
+  function shortServer(c) {
+    if (c.serverShort) return c.serverShort;
+    const s = c.charServer || '';
+    return serverShorts[s] || s.slice(0, 2);
   }
+  // 윗줄: 캐릭터명 [서버]  /  아랫줄: 직업 · 전투력
   function cellHtml(c) {
-    const body = c.text ? esc(c.text) : (c.charName ? esc(c.charName) : '<span class="empty">-</span>');
-    return body + powerHtml(c);
+    if (!c.charName && !c.text) return '<span class="empty">-</span>';
+    const top = c.charName
+      ? `<span class="nm">${esc(c.charName)}${c.charServer ? `<span class="sv">[${esc(shortServer(c))}]</span>` : ''}</span>`
+      : `<span class="nm">${esc(c.text)}</span>`;
+    let sub;
+    if (!c.charName) sub = '<span class="sub none">전투력 미등록</span>';
+    else if (c.powerError) sub = `<span class="sub err" title="${esc(c.powerError)}">조회 실패</span>`;
+    else if (typeof c.power !== 'number') sub = '<span class="sub none">조회 중…</span>';
+    else sub = `<span class="sub" title="${esc(c.charServer || '')}${c.powerAt ? ' · ' + fmtDate(c.powerAt) + ' 조회' : ''}">${c.className ? esc(c.className) + ' · ' : ''}${fmtPower(c.power)}</span>`;
+    return top + sub;
   }
   function nextNum() { for (const n of config.sequence) if (doneByNum(n) === false) return n; return null; }
   function needName() { if (myName) return false; $('mePanel').hidden = false; $('meInput').focus(); toast('먼저 이름을 입력해 주세요'); return true; }
@@ -496,7 +511,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const out = { text: c.text || '', tag: (c.tag === 0 || c.tag === 1 || c.tag === 2) ? c.tag : null };
     if (c.charName) {
       out.charName = c.charName; out.charServer = c.charServer || '';
-      if (typeof c.power === 'number') { out.power = c.power; out.powerAt = c.powerAt || null; out.className = c.className || null; out.charUrl = c.charUrl || null; }
+      if (typeof c.power === 'number') { out.power = c.power; out.powerAt = c.powerAt || null; out.className = c.className || null; out.charUrl = c.charUrl || null; out.serverShort = c.serverShort || null; }
       if (c.powerError) out.powerError = c.powerError;
     }
     return out;
@@ -507,7 +522,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const next = { ...prev, ...patch };
     if (next.text === '-') next.text = '';
     // 캐릭터명/서버가 바뀌면 이전 전투력은 버리고 다시 조회
-    if (next.charName !== prev.charName || next.charServer !== prev.charServer) { delete next.power; delete next.powerAt; delete next.className; delete next.charUrl; delete next.powerError; }
+    if (next.charName !== prev.charName || next.charServer !== prev.charServer) { delete next.power; delete next.powerAt; delete next.className; delete next.charUrl; delete next.serverShort; delete next.powerError; }
     cells[idx] = cleanCell(next);
     const ok = await safeWrite(() => db.collection('parties').doc(p.id).update({ cells }));
     if (ok) { editing = null; p.cells = cells; render(); if (cells[idx].charName && typeof cells[idx].power !== 'number') refreshPowers(false); }
@@ -539,7 +554,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
         const cells = [0, 1, 2].map(k => cleanCell(p.cells[k]));
         try {
           const j = await fetchPower(c);
-          cells[i] = cleanCell({ ...cells[i], power: j.combatPower, powerAt: new Date().toISOString(), className: j.className, charUrl: j.url, powerError: null });
+          cells[i] = cleanCell({ ...cells[i], power: j.combatPower, powerAt: new Date().toISOString(), className: j.className, charUrl: j.url, serverShort: j.serverShort || null, powerError: null });
           okCount++;
         } catch (e) {
           cells[i] = cleanCell({ ...cells[i], powerError: String(e.message || e) });
@@ -556,7 +571,11 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   async function loadServerList() {
     try {
       const r = await fetch(`${POWER_API}?servers=1`); const j = await r.json();
-      if (j.ok) $('serverList').innerHTML = j.servers.map(s => `<option value="${esc(s.name)}">${s.race === 1 ? '천족' : '마족'}</option>`).join('');
+      if (j.ok) {
+        serverShorts = {}; j.servers.forEach(s => { serverShorts[s.name] = s.short; });
+        $('serverList').innerHTML = j.servers.map(s => `<option value="${esc(s.name)}">${s.race === 1 ? '천족' : '마족'}</option>`).join('');
+        render();
+      }
     } catch (e) { /* 서버 목록은 편의 기능이라 실패해도 무시 */ }
   }
   async function saveGroup(g, patch) {
