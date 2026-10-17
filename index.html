@@ -186,17 +186,20 @@
   .mem .d { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
   .mem.on .d { background: var(--accent); }
   .chars { display: grid; }
-  .char { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(260px, 2fr) auto; gap: 10px 16px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .char { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(230px, 1.7fr) minmax(250px, 1.5fr); gap: 6px 14px; align-items: center; padding: 7px 12px; border-bottom: 1px solid var(--line); }
   .char:last-child { border-bottom: 0; }
-  @media (max-width: 860px) { .char { grid-template-columns: 1fr; } }
+  @media (max-width: 900px) { .char { grid-template-columns: minmax(150px, 1fr) minmax(230px, 2fr); } .char .tasks { grid-column: 1 / -1; } }
+  @media (max-width: 560px) { .char { grid-template-columns: 1fr; } }
+  .who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
   .who .hnm { font-weight: 700; font-size: 15px; }
   .who .hnm .sv { font-size: 11px; font-weight: 500; opacity: .7; margin-left: 3px; }
-  .who .meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .who .meta { font-size: 12px; color: var(--muted); }
   .who.low .hnm, .who.low .meta { color: var(--t2); }
   .who .meta.err { color: var(--danger); }
-  .od { display: grid; gap: 5px; }
+  .who .edit-btn { font-size: 11px; padding: 0 4px; }
+  .od { display: grid; gap: 3px; }
   .odnum { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; flex-wrap: wrap; }
-  .odnum b { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 22px; color: var(--od); line-height: 1; }
+  .odnum b { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-weight: 400; font-size: 20px; color: var(--od); line-height: 1; }
   .odnum .ex { color: var(--od-extra); font-weight: 700; }
   .odnum .max { color: var(--muted); }
   .odnum .next { color: var(--muted); font-size: 12px; margin-left: auto; }
@@ -208,27 +211,28 @@
   .odnum input.odin.big { font-family: "Black Han Sans", "Noto Sans KR", sans-serif; font-size: 20px; color: var(--od); width: 4em; }
   .odnum input.odin.ex { color: var(--od-extra); font-weight: 700; }
   .bars { display: grid; gap: 3px; }
-  .obar { height: 10px; border-radius: 99px; background: var(--od-bg); overflow: hidden; }
+  .obar { height: 8px; border-radius: 99px; background: var(--od-bg); overflow: hidden; }
   .obar i { display: block; height: 100%; background: var(--od); transition: width .25s; }
-  .obar.ex { height: 6px; background: var(--od-extra-bg); }
+  .obar.ex { height: 5px; background: var(--od-extra-bg); }
   .obar.ex i { background: var(--od-extra); }
   @media (prefers-reduced-motion: reduce) { .obar i { transition: none; } }
-  .odbtns { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 2px; }
-  .odbtns button { padding: 5px 9px; font-size: 12px; }
-  .odbtns button small { color: var(--muted); font-weight: 500; margin-left: 3px; }
-  .odbtns button.spend small { color: var(--danger); }
-  .odbtns button.gain small { color: var(--od-extra); }
-  .odbtns .sep { width: 1px; background: var(--line); margin: 2px 2px; }
-  .tasks { display: grid; gap: 6px; min-width: 150px; }
-  .task { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; user-select: none; }
-  .task input { width: 18px; height: 18px; accent-color: var(--done); margin: 0; cursor: pointer; }
-  .task .r { color: var(--muted); font-size: 11px; margin-left: auto; font-variant-numeric: tabular-nums; }
-  .task.done span.t { color: var(--done); text-decoration: line-through; }
-  .tickets { display: grid; gap: 4px; padding-bottom: 6px; margin-bottom: 2px; border-bottom: 1px dashed var(--line); }
-  .ticket { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
-  .ticket .tv { margin-left: auto; display: inline-flex; align-items: baseline; gap: 3px; font-variant-numeric: tabular-nums; }
-  .ticket .tv b { font-size: 15px; color: var(--od); }
-  .ticket .tv b.bonus { color: var(--od-extra); margin-left: 6px; }
+  .quota .qn { min-width: 4.5em; }
+  .quota .qbtns { display: inline-flex; gap: 3px; margin-left: 2px; }
+  .quota .qb { width: 26px; height: 26px; padding: 0; font-size: 16px; line-height: 1; border-radius: 6px; }
+  .quota .qb.plus { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  /* 입장권 + 회랑 체크: 한 줄 가로 배치 */
+  .tasks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .task { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; user-select: none; padding: 3px 8px 3px 5px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); }
+  .task input { width: 16px; height: 16px; accent-color: var(--done); margin: 0; cursor: pointer; }
+  .task .r { display: none; }
+  .task.done { border-color: var(--done); background: var(--done-bg); }
+  .task.done span.t { color: var(--done); }
+  .tickets { display: contents; }
+  .ticket { display: inline-flex; align-items: baseline; gap: 5px; font-size: 12px; padding: 3px 8px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); }
+  .ticket .t { color: var(--muted); }
+  .ticket .tv { display: inline-flex; align-items: baseline; gap: 2px; font-variant-numeric: tabular-nums; }
+  .ticket .tv b { font-size: 14px; color: var(--od); }
+  .ticket .tv b.bonus { color: var(--od-extra); margin-left: 4px; }
   .ticket .tv small { font-size: 10px; color: var(--muted); }
   .accfoot { display: flex; justify-content: flex-end; gap: 4px; padding: 4px 6px; border-top: 1px solid var(--line); }
   .heditor { grid-column: 1 / -1; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; display: grid; gap: 8px; }
@@ -281,7 +285,7 @@
         <span class="chip"><span class="dot" style="background:var(--od-extra)"></span>추가 오드 (최대 2,000 · 소모품으로만 충전)</span>
       </span>
     </div>
-    <div class="notice" id="hwNotice">원정·초월·성역 버튼을 누르면 기본 오드부터 깎이고 모자라면 추가 오드에서 차감됩니다. 성역은 주간 횟수에 세지 않습니다. 멤버십은 계정 단위이며 켜진 계정은 충전 +15·소모 2배입니다. 오드 숫자를 누르면 키보드로 바로 고칠 수 있습니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
+    <div class="notice" id="hwNotice">오드와 악몽·각성전 입장권은 낫미터 동기화가 자동으로 채우고, 낫미터를 안 쓰면 오드 숫자를 눌러 직접 입력하면 됩니다. 원정·초월 횟수는 계정 머리의 + / − 버튼으로 셉니다. 멤버십은 계정 단위이며 켜진 계정은 3시간마다 +15 충전됩니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
     <div class="accounts" id="accounts"></div>
   </section>
 
@@ -829,15 +833,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   const OD_MAX = 840, OD_EXTRA_MAX = 2000;
   const OD_REGEN = { normal: 10, member: 15 };          // 3시간마다
   const QUOTA = { exp: 83, trans: 55 };                 // 계정별 주간 100% 보상 횟수
-  const ACTIONS = [
-    { key: 'exp',   label: '원정 보통',    cost: 40 },
-    { key: 'exp',   label: '원정 어려움',  cost: 60 },
-    { key: 'trans', label: '초월 1~3단계', cost: 40 },
-    { key: 'trans', label: '초월 4단계',   cost: 60 },
-    { key: 'sanct', label: '성역',         cost: 80 },   // 주간 횟수 제한 없음, 멤버십 2배
-  ];
   const TASKS = [
-    { key: 'awaken',  label: '각성전',    reset: 'week' },
     { key: 'cor_low', label: '회랑 하층', reset: 'corridor' },
     { key: 'cor_mid', label: '회랑 중층', reset: 'corridor' },
   ];
@@ -870,7 +866,6 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   try { hwScopeAll = localStorage.getItem('aion2.hwScope') === 'all'; } catch (e) { /* ignore */ }
   let hwEditing = null;   // {aid, kind:'title'} | {aid, cid}
   let odEditing = null;   // {cid, field}
-  let hwUndo = null;      // {aid, cid, before:{od, odAt, extra, counts}, label}
   let hwLoaded = { acc: false, chars: false };
   const charsOf = (aid) => hwChars.filter(c => c.account === aid).sort((a, b) => a.order - b.order);
 
@@ -879,48 +874,26 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   function taskDone(c, t, now) { const at = tsOf((c.tasks || {})[t.key]); if (!at) return false; return at >= (t.reset === 'week' ? weekStart(now) : corridorStart(now)); }
 
   // --- 동작 ---
-  async function hwSpend(a, c, action) {
+  // 계정의 주간 원정/초월 횟수 ±1 (오드는 낫미터 연동 또는 직접 입력으로 관리)
+  async function hwBumpCount(a, key, delta) {
     const now = Date.now();
-    const od = currentOd(a, c, now);
-    const cost = action.cost * (a.member ? 2 : 1);
-    if (od + (c.extra || 0) < cost) { toast(`오드가 부족합니다 (필요 ${cost}, 보유 ${od}+${c.extra || 0})`); return; }
     const counts = effCounts(a, now);
-    const before = { od: c.od, odAt: c.odAt, extra: c.extra || 0, counts: { ...(a.counts || {}) }, weekKey: a.weekKey };
-    const fromBasic = Math.min(od, cost);
-    const newOd = od - fromBasic, newExtra = (c.extra || 0) - (cost - fromBasic);
-    if (QUOTA[action.key]) counts[action.key] = (counts[action.key] || 0) + 1; // 성역은 주간 횟수에 안 셈
-    const batch = db.batch();
-    batch.update(db.collection('hwChars').doc(c.id), { od: newOd, odAt: now, extra: newExtra });
-    batch.update(db.collection('hwAccounts').doc(a.id), { counts, weekKey: weekStart(now) });
-    const ok = await safeWrite(() => batch.commit());
+    const next = Math.max(0, (counts[key] || 0) + delta);
+    if (next === counts[key]) return;
+    counts[key] = next;
+    const ok = await safeWrite(() => db.collection('hwAccounts').doc(a.id).update({ counts, weekKey: weekStart(now) }));
     if (!ok) return;
-    Object.assign(c, { od: newOd, odAt: now, extra: newExtra }); a.counts = counts; a.weekKey = weekStart(now);
-    hwUndo = { aid: a.id, cid: c.id, before, label: `${c.name} ${action.label}` };
-    renderHw();
-    const over = QUOTA[action.key] && counts[action.key] > QUOTA[action.key];
-    toast(`${c.name} · ${action.label} −${cost}${cost - fromBasic ? ` (추가 오드 ${cost - fromBasic})` : ''}${over ? ' · 주간 100% 보상 횟수 초과' : ''}`);
-  }
-  async function hwUndoLast() {
-    const u = hwUndo; if (!u) return;
-    const a = hwAccounts.find(x => x.id === u.aid), c = hwChars.find(x => x.id === u.cid); if (!a || !c) { hwUndo = null; renderHw(); return; }
-    const batch = db.batch();
-    batch.update(db.collection('hwChars').doc(c.id), { od: u.before.od, odAt: u.before.odAt ?? Date.now(), extra: u.before.extra });
-    batch.update(db.collection('hwAccounts').doc(a.id), { counts: u.before.counts, weekKey: u.before.weekKey ?? weekStart(Date.now()) });
-    const ok = await safeWrite(() => batch.commit(), `되돌림: ${u.label}`);
-    if (ok) { Object.assign(c, { od: u.before.od, odAt: u.before.odAt, extra: u.before.extra }); a.counts = u.before.counts; a.weekKey = u.before.weekKey; hwUndo = null; renderHw(); }
-  }
-  async function hwGainExtra(a, c, n) {
-    const extra = Math.min(OD_EXTRA_MAX, (c.extra || 0) + n);
-    const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update({ extra }), `${c.name} · 추가 오드 +${n}`);
-    if (ok) { c.extra = extra; hwUndo = null; renderHw(); }
+    a.counts = counts; a.weekKey = weekStart(now); renderHw();
+    const label = key === 'exp' ? '원정' : '초월';
+    toast(`${a.title} · ${label} ${next} / ${QUOTA[key]}${next > QUOTA[key] ? ' · 주간 100% 보상 횟수 초과' : ''}`);
   }
   async function hwSetOd(a, c, field, raw) {
     const n = Math.round(Number(raw));
     if (isNaN(n)) { odEditing = null; renderHw(); return; }
-    const patch = field === 'od' ? { od: Math.max(0, Math.min(OD_MAX, n)), odAt: Date.now() } : { extra: Math.max(0, Math.min(OD_EXTRA_MAX, n)) };
+    const patch = field === 'od' ? { od: Math.max(0, Math.min(OD_MAX, n)), odAt: Date.now(), odSource: 'manual' } : { extra: Math.max(0, Math.min(OD_EXTRA_MAX, n)) };
     odEditing = null;
     const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update(patch));
-    if (ok) { Object.assign(c, patch); hwUndo = null; renderHw(); toast(`${c.name} · ${field === 'od' ? '기본' : '추가'} 오드를 ${field === 'od' ? patch.od : patch.extra}(으)로 맞췄습니다`); }
+    if (ok) { Object.assign(c, patch); renderHw(); toast(`${c.name} · ${field === 'od' ? '기본' : '추가'} 오드를 ${field === 'od' ? patch.od : patch.extra}(으)로 맞췄습니다`); }
   }
   async function hwToggleTask(c, t, on) {
     const tasks = { ...(c.tasks || {}) }; if (on) tasks[t.key] = Date.now(); else delete tasks[t.key];
@@ -1021,15 +994,16 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     [['원정', 'exp'], ['초월', 'trans']].forEach(([lab, k]) => {
       const n = counts[k] || 0, max = QUOTA[k];
       const q = document.createElement('div'); q.className = 'quota';
-      q.innerHTML = `<span class="lab">${lab}</span><span><b>${n}</b> / ${max}</span><span class="qbar"><i class="${n >= max ? 'full' : ''}" style="width:${Math.min(100, n / max * 100)}%"></i></span>`;
-      q.title = n >= max ? `${lab} 주간 100% 보상 횟수를 모두 썼습니다` : `${lab} 100% 보상 ${max - n}회 남음`;
+      q.innerHTML = `<span class="lab">${lab}</span><span class="qn"><b>${n}</b> / ${max}</span><span class="qbar"><i class="${n >= max ? 'full' : ''}" style="width:${Math.min(100, n / max * 100)}%"></i></span>
+        <span class="qbtns"><button type="button" class="qb" data-d="-1" title="${lab} 횟수 −1" ${!db || n === 0 ? 'disabled' : ''}>−</button><button type="button" class="qb plus" data-d="1" title="${lab} 횟수 +1" ${!db ? 'disabled' : ''}>+</button></span>`;
+      q.title = n >= max ? `${lab} 주간 100% 보상 횟수를 모두 썼습니다 (${max - n < 0 ? -(max - n) + '회 초과' : '남음 0'})` : `${lab} 100% 보상 ${max - n}회 남음`;
+      q.querySelectorAll('.qb').forEach(b => b.addEventListener('click', () => hwBumpCount(a, k, Number(b.dataset.d))));
       head.appendChild(q);
     });
     const mem = document.createElement('button'); mem.type = 'button'; mem.className = 'mem' + (a.member ? ' on' : '');
     mem.innerHTML = `<span class="d"></span>멤버십 ${a.member ? 'ON' : 'OFF'}`; mem.title = '계정 멤버십: 켜면 3시간마다 +15 충전, 원정·초월 소모 2배';
     mem.disabled = !db; mem.addEventListener('click', () => hwToggleMember(a)); head.appendChild(mem);
     const sp = document.createElement('span'); sp.className = 'spacer'; head.appendChild(sp);
-    if (hwUndo && hwUndo.aid === a.id) { const u = document.createElement('button'); u.type = 'button'; u.className = 'ghost'; u.textContent = `↶ 되돌리기 (${hwUndo.label})`; u.addEventListener('click', hwUndoLast); head.appendChild(u); }
     if (hwEditing && hwEditing.aid === a.id && hwEditing.kind === 'title') {
       const ed = document.createElement('div'); ed.className = 'heditor'; ed.style.width = '100%';
       ed.innerHTML = `<div class="two">
@@ -1077,7 +1051,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     else if (typeof c.power !== 'number') meta = '<div class="meta">전투력 조회 중…</div>';
     else meta = `<div class="meta" title="${c.powerAt ? fmtDate(c.powerAt) + ' 조회' : ''}">${c.cls ? esc(c.cls) + ' · ' : ''}${fmtPower(c.power)}</div>`;
     who.innerHTML = `<div class="hnm">${c.name ? esc(c.name) : '<span style="color:var(--muted)">이름 없음</span>'}${c.server ? `<span class="sv">[${esc(sv)}]</span>` : ''}</div>${meta}
-      <button type="button" class="ghost" data-act="edit" style="margin-top:4px;font-size:12px;padding-left:0">캐릭터 수정</button>`;
+      <button type="button" class="ghost edit-btn" data-act="edit" title="캐릭터 수정">수정</button>`;
     who.querySelector('[data-act="edit"]').addEventListener('click', () => { hwEditing = { aid: a.id, cid: c.id }; renderHw(); });
     row.appendChild(who);
 
@@ -1089,8 +1063,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const basicHtml = edOd ? `<input class="odin big" type="number" min="0" max="${OD_MAX}" step="1" value="${od}" aria-label="기본 오드">` : `<b class="edit" title="누르면 기본 오드를 직접 입력" tabindex="0" role="button">${fmtN(od)}</b>`;
     const extraHtml = edEx ? `<span class="ex">(+<input class="odin ex" type="number" min="0" max="${OD_EXTRA_MAX}" step="1" value="${c.extra || 0}" aria-label="추가 오드">)</span>` : `<span class="ex edit" title="누르면 추가 오드를 직접 입력" tabindex="0" role="button">(+${fmtN(c.extra || 0)})</span>`;
     odBox.innerHTML = `<div class="odnum">${basicHtml}${extraHtml}<span class="max">/ ${fmtN(OD_MAX)}</span>${nextTxt}</div>
-      <div class="bars"><div class="obar" title="기본 오드 ${od} / ${OD_MAX}"><i style="width:${od / OD_MAX * 100}%"></i></div><div class="obar ex" title="추가 오드 ${c.extra || 0} / ${OD_EXTRA_MAX}"><i style="width:${(c.extra || 0) / OD_EXTRA_MAX * 100}%"></i></div></div>
-      <div class="odbtns"></div>`;
+      <div class="bars"><div class="obar" title="기본 오드 ${od} / ${OD_MAX}"><i style="width:${od / OD_MAX * 100}%"></i></div><div class="obar ex" title="추가 오드 ${c.extra || 0} / ${OD_EXTRA_MAX}"><i style="width:${(c.extra || 0) / OD_EXTRA_MAX * 100}%"></i></div></div>`;
     const wireIn = (inp, field) => {
       let done = false;
       const commit = () => { if (done) return; done = true; hwSetOd(a, c, field, inp.value); };
@@ -1106,24 +1079,6 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
       el.addEventListener('click', open);
       el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
     });
-    const btns = odBox.querySelector('.odbtns');
-    ACTIONS.forEach(act => {
-      const cost = act.cost * (a.member ? 2 : 1);
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'spend';
-      b.innerHTML = `${esc(act.label)}<small>−${cost}</small>`;
-      b.disabled = !db || od + (c.extra || 0) < cost;
-      b.title = od + (c.extra || 0) < cost ? '오드가 부족합니다' : `${act.label}: 오드 ${cost} 소모${act.key === 'exp' ? ', 원정 횟수 +1' : act.key === 'trans' ? ', 초월 횟수 +1' : ''}`;
-      b.addEventListener('click', () => hwSpend(a, c, act));
-      btns.appendChild(b);
-    });
-    const sep = document.createElement('span'); sep.className = 'sep'; btns.appendChild(sep);
-    [10, 40].forEach(n => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'gain';
-      b.innerHTML = `${n === 10 ? '소형' : '대형'} 소모품<small>+${n}</small>`; b.title = `추가 오드 +${n}`;
-      b.disabled = !db || (c.extra || 0) >= OD_EXTRA_MAX;
-      b.addEventListener('click', () => hwGainExtra(a, c, n));
-      btns.appendChild(b);
-    });
     row.appendChild(odBox);
 
     const tasks = document.createElement('div'); tasks.className = 'tasks';
@@ -1131,14 +1086,15 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const ticketRow = (label, base, bonus, at) => {
       if (base == null && bonus == null) return '';
       const when = at ? fmtDate(new Date(tsOf(at)).toISOString()) : '';
-      return `<div class="ticket" title="낫미터 기준${when ? ' · ' + when + ' 읽음' : ''}"><span class="t">${label} 입장권</span><span class="tv"><b>${base ?? 0}</b><small>기본</small><b class="bonus">+${bonus ?? 0}</b><small>추가</small></span></div>`;
+      return `<span class="ticket" title="${label} 입장권 · 낫미터 기준${when ? ' · ' + when + ' 읽음' : ''}"><span class="t">${label}</span><span class="tv"><b>${base ?? 0}</b><small>기본</small><b class="bonus">+${bonus ?? 0}</b><small>추가</small></span></span>`;
     };
     const ticketsHtml = ticketRow('악몽', c.nmBase, c.nmBonus, c.nmAt) + ticketRow('각성전', c.awBase, c.awBonus, c.awAt);
     if (ticketsHtml) { const tb = document.createElement('div'); tb.className = 'tickets'; tb.innerHTML = ticketsHtml; tasks.appendChild(tb); }
     TASKS.forEach(t => {
       const done = taskDone(c, t, now);
       const l = document.createElement('label'); l.className = 'task' + (done ? ' done' : '');
-      l.innerHTML = `<input type="checkbox" ${done ? 'checked' : ''} ${db ? '' : 'disabled'}><span class="t">${esc(t.label)}</span><span class="r" title="초기화 시각">${t.reset === 'week' ? '수 05시' : '화·목·토 21시'}</span>`;
+      l.title = `${t.label} · ${t.reset === 'week' ? '수요일 05시' : '화·목·토 21시'}에 자동 해제`;
+      l.innerHTML = `<input type="checkbox" ${done ? 'checked' : ''} ${db ? '' : 'disabled'}><span class="t">${esc(t.label)}</span>`;
       l.querySelector('input').addEventListener('change', (e) => hwToggleTask(c, t, e.target.checked));
       tasks.appendChild(l);
     });
