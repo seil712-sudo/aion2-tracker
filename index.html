@@ -258,7 +258,7 @@
   .heditor .hint { font-size: 12px; color: var(--muted); }
 
   /* ===== 숙제 전용 앱 모드 (exe가 ?app=hw 로 엽니다) ===== */
-  .app-hw #tabParty, .app-hw #paneParty, .app-hw .summary, .app-hw .owner-field, .app-hw #mePanel, .app-hw #btnHwScope, .app-hw #btnTheme { display: none !important; }
+  .app-hw #tabParty, .app-hw #paneParty, .app-hw .summary, .app-hw .owner-field, .app-hw #mePanel, .app-hw #btnHwScope, .app-hw #btnTheme, .app-hw #meHw { display: none !important; }
   #tabBoss, #tabContent { display: none; }
   .app-hw #tabBoss, .app-hw #tabContent { display: inline-block; }
   /* 컨텐츠 알림 탭 */
@@ -309,6 +309,7 @@
     <div>
       <h1>아이온<span>2</span> 주간 파티 트래커</h1>
       <div class="sub" id="sub">불러오는 중…</div>
+      <div class="sub" style="font-size:11px;opacity:.8">버전 <b id="verTag" style="font-weight:500"></b> · 이 날짜가 바뀌면 새 버전이 적용된 것입니다</div>
     </div>
     <div class="summary">
       <div class="meter"><b id="doneCount">0</b><small>/ <span id="totalCount">0</span> 파티 완료</small></div>
@@ -350,6 +351,7 @@
     </div>
     <div class="toolbar">
       <button type="button" class="primary" id="btnAddAcc">+ 계정 추가</button>
+      <span class="me" id="meHw" style="margin-left:0" title="exe에서 정한 이름과 같게 두면 같은 계정이 보입니다">내 이름: <b id="meNameHw">-</b> <button type="button" class="ghost" id="btnMeHw">변경</button></span>
       <button type="button" id="btnHwScope" title="내 이름으로 등록된 계정만 볼지, 전체를 볼지 전환합니다">전체 보기</button>
       <button type="button" id="btnPowerHw" title="파티 탭과 숙제 탭의 모든 캐릭터 전투력을 NC 캐릭터 정보실에서 다시 불러옵니다">전투력 갱신</button>
       <span class="legend">
@@ -465,8 +467,12 @@ const POWER_API = 'https://aion2-power.vercel.app/api/char';
 const LOW_POWER = 500000;            // 이 값 미만이면 "남툴 500k 미만" 색으로 표시
 const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지를 열 때 자동 갱신
 
+// 배포 버전 표시 (파일을 고칠 때마다 갱신)
+const APP_VERSION = '2026-10-18 20:50';
+
 (() => {
   const $ = (id) => document.getElementById(id);
+  $('verTag').textContent = APP_VERSION;
   const DEFAULT_TAGS = ['본계정', '부계정', '남툴 500k 미만'];
 
   let db = null;
@@ -547,6 +553,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     $('sub').textContent = config.lastReset ? `마지막 초기화 ${fmtDate(config.lastReset)} · 체크하면 모두에게 바로 보입니다` : '체크하면 모두에게 바로 보입니다';
     $('legend').innerHTML = config.tagNames.map((m, i) => `<span class="chip"><span class="dot t${i}"></span>${esc(m)}</span>`).join('');
     $('meName').textContent = myName || '미설정';
+    $('meNameHw').textContent = myName || '미설정'; $('meNameHw').style.color = myName ? '' : 'var(--accent)';
   }
 
   function renderSeq() {
@@ -1295,6 +1302,8 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
         $('appMsg').title = (j.recent || []).join('\n');
         if (j.owner && appOwner !== j.owner) { appOwner = j.owner; renderHw(); }
         appOwnerCustom = !!j.ownerIsCustom;
+        // 이름을 아직 안 정했으면 처음 한 번 이름 설정 창을 자동으로 엽니다 (웹과 같은 이름을 쓰게 유도)
+        if (!appOwnerCustom && !window.__askedOwner) { window.__askedOwner = true; $('ownerInput').value = ''; $('ownerPanel').hidden = false; }
         $('appOwnerName').textContent = j.owner || '-'; $('appOwnerName').style.color = j.ownerIsCustom ? 'var(--text)' : 'var(--accent)';
         $('btnOwner').textContent = j.ownerIsCustom ? '변경' : '이름 정하기';
         if (typeof j.autostart === 'boolean' && document.activeElement !== $('appAutostart')) $('appAutostart').checked = j.autostart;
@@ -1510,7 +1519,9 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
   $('settingsNo').addEventListener('click', () => { $('settingsPanel').hidden = true; });
   $('settingsYes').addEventListener('click', saveSettings);
   $('btnAddGroup').addEventListener('click', addGroup);
-  $('btnMe').addEventListener('click', () => { $('meInput').value = myName; $('mePanel').hidden = false; $('meInput').focus(); });
+  const openMe = () => { $('meInput').value = myName; $('mePanel').hidden = false; $('meInput').focus(); $('mePanel').scrollIntoView({ block: 'nearest' }); };
+  $('btnMe').addEventListener('click', openMe);
+  $('btnMeHw').addEventListener('click', openMe);
   $('meYes').addEventListener('click', saveMe);
   $('meInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveMe(); });
   $('seedYes').addEventListener('click', seed);
