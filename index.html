@@ -15,8 +15,9 @@
     --od: #5aa3f0; --od-bg: #1d2f45; --od-extra: #b391ee; --od-extra-bg: #2d2543;
     --radius: 8px; --shadow: 0 1px 2px rgba(0, 0, 0, .4);
   }
+  /* 라이트 테마: 시스템이 라이트이고 다크로 고정하지 않았을 때, 또는 라이트로 고정했을 때 */
   @media (prefers-color-scheme: light) {
-    :root {
+    :root:not([data-theme="dark"]) {
       color-scheme: light;
       --bg: #f3f1ec; --surface: #ffffff; --surface-2: #ebe8e0; --line: #d8d4ca;
       --text: #1c1e24; --muted: #6b6f78; --accent: #b8841f; --accent-ink: #1c1e24;
@@ -26,6 +27,16 @@
       --shadow: 0 1px 2px rgba(20, 20, 30, .08);
     }
   }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f3f1ec; --surface: #ffffff; --surface-2: #ebe8e0; --line: #d8d4ca;
+    --text: #1c1e24; --muted: #6b6f78; --accent: #b8841f; --accent-ink: #1c1e24;
+    --done: #2f8f4e; --done-bg: #e3f3e8; --next-bg: #fff1cf;
+    --danger: #b3382f; --t0: #111111; --t1: #c2338f; --t2: #d4720a;
+    --od: #2f7fd1; --od-bg: #dbe8f7; --od-extra: #8a5fd6; --od-extra-bg: #ebe3f9;
+    --shadow: 0 1px 2px rgba(20, 20, 30, .08);
+  }
+  .theme-btn { font-size: 12px; padding: 4px 10px; }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -245,9 +256,54 @@
   .heditor .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   @media (max-width: 480px) { .heditor .two { grid-template-columns: 1fr; } }
   .heditor .hint { font-size: 12px; color: var(--muted); }
+
+  /* ===== 숙제 전용 앱 모드 (exe가 ?app=hw 로 엽니다) ===== */
+  .app-hw #tabParty, .app-hw #paneParty, .app-hw .summary, .app-hw .owner-field, .app-hw #mePanel, .app-hw #btnHwScope, .app-hw #btnTheme { display: none !important; }
+  #tabBoss, #tabContent { display: none; }
+  .app-hw #tabBoss, .app-hw #tabContent { display: inline-block; }
+  /* 컨텐츠 알림 탭 */
+  .ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .ctl label { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+  .ctl input[type="text"] { font: inherit; width: 7em; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .ctl select { font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+  .grp button { border: 0; border-radius: 0; padding: 5px 12px; font-size: 13px; background: var(--surface); }
+  .grp button + button { border-left: 1px solid var(--line); }
+  .grp button.on { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .boss .days { font-size: 12px; color: var(--muted); margin-right: 4px; }
+  /* 보스 알림 탭 */
+  .bosses { display: grid; gap: 10px; }
+  .boss { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(220px, 2fr) auto; gap: 6px 14px; align-items: center; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  @media (max-width: 760px) { .boss { grid-template-columns: 1fr; } }
+  .boss.off { opacity: .55; }
+  .boss .bname { font-weight: 700; font-size: 15px; }
+  .boss .bmeta { font-size: 12px; color: var(--muted); }
+  .boss .times { display: flex; flex-wrap: wrap; gap: 4px; }
+  .boss .times span { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  .boss .times span.next { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+  .boss .bact { display: flex; gap: 4px; align-items: center; }
+  .bsettings { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 16px; }
+  .bsettings label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  .bsettings input[type="text"], .bsettings input[type="number"], .bsettings select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--text); width: 100%; }
+  .bsettings input[type="range"] { width: 100%; }
+  .bsettings .radios { display: flex; gap: 6px; flex-wrap: wrap; }
+  .bsettings .radios label { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 99px; color: var(--text); cursor: pointer; }
+  .bsettings .radios label.on { border-color: var(--accent); background: var(--next-bg); }
+  .nextalert { font-size: 13px; }
+  .nextalert b { color: var(--accent); }
+  .app-hw .appbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 12px; color: var(--muted); padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .app-hw .appbar .st { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+  .app-hw .appbar .st.ok { background: var(--done); }
+  .app-hw .appbar .st.err { background: var(--danger); }
+  .app-hw .appbar .msg { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .appbar { display: none; }
 </style>
 </head>
 <body>
+<script>
+  // 테마를 화면 그리기 전에 적용 (깜빡임 방지). 값: system | light | dark
+  (function () { try { var t = localStorage.getItem('aion2.theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {} })();
+</script>
 <div class="wrap">
   <header>
     <div>
@@ -263,7 +319,10 @@
   <div class="tabs" role="tablist">
     <button type="button" class="tab on" id="tabParty" role="tab">파티</button>
     <button type="button" class="tab" id="tabHw" role="tab">숙제</button>
+    <button type="button" class="tab" id="tabBoss" role="tab">보스 알림</button>
+    <button type="button" class="tab" id="tabContent" role="tab">컨텐츠 알림</button>
     <span style="flex:1"></span>
+    <button type="button" class="theme-btn" id="btnTheme" style="align-self:center" title="라이트 / 다크 / 시스템 설정 따라가기">테마</button>
     <span class="clock" style="align-self:center">서버 시간 <b id="clock">--:--</b> · <span id="weekReset"></span></span>
   </div>
 
@@ -278,6 +337,17 @@
 
   <!-- ===== 숙제 탭 ===== -->
   <section class="pane" id="paneHw" hidden>
+    <div class="appbar" id="appbar"><span class="st" id="appSt"></span><span class="msg" id="appMsg">낫미터 동기화 상태를 확인하는 중…</span>
+      <span title="웹 트래커의 '체크하는 사람' 이름과 같게 두면 다른 PC·폰 웹에서도 내 계정이 보입니다">이름 <b id="appOwnerName" style="color:var(--text)">-</b> <button type="button" class="ghost" id="btnOwner" style="font-size:12px;padding:0 4px">변경</button></span>
+      <label class="task" title="Windows 시작 시 트레이에서 자동 실행"><input type="checkbox" id="appAutostart"><span class="t">시작 시 자동 실행</span></label>
+      <button type="button" class="theme-btn" id="btnThemeApp" title="라이트 / 다크 / 시스템 설정 따라가기">테마</button>
+      <span class="clock">서버 시간 <b id="appClock">--:--</b> · <span id="appWeek"></span></span></div>
+    <div class="panel" id="ownerPanel" hidden>
+      <h2>내 이름 설정</h2>
+      <div class="sub">이 프로그램에서 만든 계정의 주인으로 기록되는 이름입니다. 웹 트래커(다른 PC·폰)에서 "체크하는 사람"에 같은 이름을 넣으면 여기 계정과 캐릭터가 그대로 보입니다. 이름을 바꾸면 기존 계정의 주인도 함께 바뀝니다.</div>
+      <input type="text" id="ownerInput" maxlength="20" placeholder="예: 현덕">
+      <div class="actions"><button type="button" id="ownerNo">취소</button><button type="button" id="ownerYes" class="primary">저장</button></div>
+    </div>
     <div class="toolbar">
       <button type="button" class="primary" id="btnAddAcc">+ 계정 추가</button>
       <button type="button" id="btnHwScope" title="내 이름으로 등록된 계정만 볼지, 전체를 볼지 전환합니다">전체 보기</button>
@@ -289,6 +359,40 @@
     </div>
     <div class="notice" id="hwNotice">오드와 악몽·각성전 입장권은 낫미터 동기화가 자동으로 채우고, 낫미터를 안 쓰면 오드 숫자를 눌러 직접 입력하면 됩니다. 원정·초월 횟수는 계정 머리의 + / − 버튼으로 셉니다. 멤버십은 계정 단위이며 켜진 계정은 3시간마다 +15 충전됩니다. 원정·초월 횟수는 수요일 05시에, 회랑 체크는 화·목·토 21시에 자동 초기화됩니다.</div>
     <div class="accounts" id="accounts"></div>
+  </section>
+
+  <!-- ===== 보스 알림 탭 (exe 앱 모드 전용, 설정은 PC에 저장) ===== -->
+  <section class="pane" id="paneBoss" hidden>
+    <div class="appbar" id="bossbar"><span class="st ok"></span><span class="msg nextalert" id="bossNext">다음 알림 계산 중…</span><span class="clock">현재 <b id="bossClock">--:--</b></span></div>
+    <div class="panel">
+      <h2>알림 설정 (모든 보스 공통 기본값)</h2>
+      <div class="bsettings">
+        <label>알림 방식
+          <span class="radios" id="bsMode">
+            <label data-v="both"><input type="radio" name="bsMode" value="both"> 팝업 + 음성</label>
+            <label data-v="toast"><input type="radio" name="bsMode" value="toast"> 팝업만</label>
+            <label data-v="tts"><input type="radio" name="bsMode" value="tts"> 음성만</label>
+          </span></label>
+        <label>기본 몇 분 전 알림 (여러 개는 쉼표: 10,3) <input type="text" id="bsLead" placeholder="5"></label>
+        <label>TTS 목소리 <select id="bsVoice"></select></label>
+        <label>말 속도 <span id="bsRateV" style="color:var(--text)"></span><input type="range" id="bsRate" min="-5" max="5" step="1"></label>
+        <label>음량 <span id="bsVolV" style="color:var(--text)"></span><input type="range" id="bsVol" min="0" max="100" step="5"></label>
+        <label>음성 반복 횟수 <input type="number" id="bsRepeat" min="1" max="3" step="1"></label>
+        <label>사전 알림 문구 ({boss} {lead} {time} 사용 가능) <input type="text" id="bsTpl" maxlength="80"></label>
+        <label>출현 시각(0분 전) 문구 <input type="text" id="bsTplNow" maxlength="80"></label>
+      </div>
+      <div class="actions"><button type="button" id="bsTest">미리 듣기 / 팝업 테스트</button><span style="flex:1"></span><button type="button" id="bsSave" class="primary">설정 저장</button></div>
+    </div>
+    <div class="toolbar"><button type="button" class="primary" id="btnAddBoss">+ 보스 추가</button><span class="legend"><span class="chip">출현 시각은 PC 시계(한국 시간) 기준 · 프로그램이 트레이에 켜져 있어야 알림이 옵니다</span></span></div>
+    <div class="bosses" id="bosses"></div>
+    <div class="notice" id="bossRecent" hidden></div>
+  </section>
+
+  <!-- ===== 컨텐츠 알림 탭 (exe 앱 모드 전용 · 고정 일정) ===== -->
+  <section class="pane" id="paneContent" hidden>
+    <div class="appbar" id="contentbar"><span class="st ok"></span><span class="msg nextalert" id="contentNext">다음 알림 계산 중…</span><span class="clock">현재 <b id="contentClock">--:--</b></span></div>
+    <div class="notice">음성·팝업 방식, 목소리, 기본 몇 분 전 같은 공통 설정은 <b>보스 알림</b> 탭의 "알림 설정"을 함께 씁니다. 여기서는 컨텐츠별로 켜기, 몇 분 전, 방식만 정합니다. 바꾸면 바로 저장됩니다.</div>
+    <div class="bosses" id="contents"></div>
   </section>
 
   <!-- ===== 파티 탭 ===== -->
@@ -911,12 +1015,16 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const ok = await safeWrite(() => batch.commit(), `${a.title} 멤버십 ${!a.member ? 'ON · 충전 +15, 소모 2배' : 'OFF · 충전 +10'}`);
     if (ok) { charsOf(a.id).forEach(c => { c.od = currentOd(a, c, now); c.odAt = now; }); a.member = !a.member; renderHw(); }
   }
+  // 계정 주인 키: 앱(exe) 모드에서는 이 PC 이름, 웹에서는 상단에 입력한 이름
+  function ownerKey() { return APP_HW ? appOwner : myName; }
   async function hwAddAccount() {
     if (!db) return;
-    if (needName()) return; // 계정 주인을 기록하려면 이름이 필요
+    if (APP_HW) { if (!appOwner) { toast('프로그램과 연결 중입니다. 잠시 후 다시 눌러주세요.'); return; } }
+    else if (needName()) return; // 계정 주인을 기록하려면 이름이 필요
+    const owner = ownerKey();
     const maxOrder = hwAccounts.reduce((m, a) => Math.max(m, a.order || 0), 0);
     const id = 'acc' + Date.now().toString(36);
-    const ok = await safeWrite(() => db.collection('hwAccounts').doc(id).set({ order: maxOrder + 1, title: myName, owner: myName, member: false, counts: { exp: 0, trans: 0 }, weekKey: weekStart(Date.now()) }));
+    const ok = await safeWrite(() => db.collection('hwAccounts').doc(id).set({ order: maxOrder + 1, title: APP_HW ? '내 계정' : owner, owner, member: false, counts: { exp: 0, trans: 0 }, weekKey: weekStart(Date.now()) }));
     if (ok) hwEditing = { aid: id, kind: 'title' };
   }
   async function hwAddChar(a) {
@@ -930,7 +1038,11 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     if (changed) Object.assign(patch, { cls: null, power: null, powerAt: null, serverShort: null, charUrl: null, powerError: null });
     hwEditing = null;
     const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).update(patch));
-    if (ok) { Object.assign(c, patch); renderHw(); if (patch.name && (changed || c.power == null)) refreshHwPowers(false); }
+    if (ok) {
+      Object.assign(c, patch); renderHw();
+      if (patch.name && (changed || c.power == null)) refreshHwPowers(false);
+      if (APP_HW && patch.name) { try { fetch('/api/sync-now', { method: 'POST' }); } catch (e) { /* exe 없음 */ } } // 낫미터 값 즉시 반영
+    }
   }
   async function hwDeleteChar(c) { const ok = await safeWrite(() => db.collection('hwChars').doc(c.id).delete(), '캐릭터를 삭제했습니다'); if (ok) hwEditing = null; }
   async function hwDeleteAccount(a) {
@@ -975,17 +1087,19 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const now = Date.now();
     const root = $('accounts'); root.replaceChildren();
     $('btnAddAcc').disabled = !db; $('btnPowerHw').disabled = !db || hwPowerBusy;
-    const scopeAll = hwScopeAll || !myName;
-    $('btnHwScope').textContent = scopeAll ? '내 계정만 보기' : '전체 보기';
-    $('btnHwScope').disabled = !myName;
+    const me = ownerKey();
+    const scopeAll = hwScopeAll || !me;
+    $('btnHwScope').textContent = scopeAll ? (APP_HW ? '이 PC 계정만 보기' : '내 계정만 보기') : '전체 보기';
+    $('btnHwScope').disabled = !me;
     const all = hwAccounts.slice().sort((a, b) => a.order - b.order);
-    const accs = scopeAll ? all : all.filter(a => (a.owner || '') === myName);
+    const accs = scopeAll ? all : all.filter(a => (a.owner || '') === me);
     accs.forEach(a => root.appendChild(renderAccount(a, now, scopeAll)));
     if (!accs.length) {
       const e = document.createElement('div'); e.className = 'notice';
       if (!hwLoaded.acc) e.textContent = '데이터를 불러오는 중…';
-      else if (!myName) e.textContent = '상단에서 이름을 먼저 입력하면 내 계정만 따로 볼 수 있습니다.';
-      else if (!scopeAll && all.length) e.textContent = `"${myName}" 이름으로 등록된 계정이 없습니다. "+ 계정 추가"를 누르거나 "전체 보기"로 다른 사람 계정을 볼 수 있습니다.`;
+      else if (APP_HW && !me) e.textContent = '프로그램과 연결하는 중입니다…';
+      else if (!me) e.textContent = '상단에서 이름을 먼저 입력하면 내 계정만 따로 볼 수 있습니다.';
+      else if (!scopeAll && all.length) e.textContent = APP_HW ? '이 PC에서 등록한 계정이 없습니다. "+ 계정 추가"로 시작하거나 "전체 보기"로 다른 사람 계정을 볼 수 있습니다.' : `"${me}" 이름으로 등록된 계정이 없습니다. "+ 계정 추가"를 누르거나 "전체 보기"로 다른 사람 계정을 볼 수 있습니다.`;
       else e.textContent = '계정이 없습니다. "+ 계정 추가"를 눌러 시작하세요.';
       root.appendChild(e);
     }
@@ -997,7 +1111,7 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     const title = document.createElement('button'); title.type = 'button'; title.className = 'acctitle'; title.textContent = a.title || '(이름 없음)'; title.title = '계정 이름 · 주인 수정';
     title.addEventListener('click', () => { hwEditing = { aid: a.id, kind: 'title' }; renderHw(); });
     head.appendChild(title);
-    if (scopeAll) { const o = document.createElement('span'); o.className = 'owner' + ((a.owner || '') === myName && myName ? ' me' : ''); o.textContent = a.owner ? `${a.owner}${(a.owner === myName) ? ' (나)' : ''}` : '주인 미지정'; head.appendChild(o); }
+    if (scopeAll) { const me = ownerKey(); const o = document.createElement('span'); o.className = 'owner' + ((a.owner || '') === me && me ? ' me' : ''); o.textContent = a.owner ? `${a.owner}${(a.owner === me) ? ' (나)' : ''}` : '주인 미지정'; head.appendChild(o); }
     [['원정', 'exp'], ['초월', 'trans']].forEach(([lab, k]) => {
       const n = counts[k] || 0, max = QUOTA[k];
       const q = document.createElement('div'); q.className = 'quota';
@@ -1015,11 +1129,11 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
       const ed = document.createElement('div'); ed.className = 'heditor'; ed.style.width = '100%';
       ed.innerHTML = `<div class="two">
           <label>계정 이름 <input type="text" class="atitle" maxlength="20" placeholder="예: 본계정, 부계정"></label>
-          <label>주인 (상단에 입력하는 이름과 같아야 "내 계정"으로 보입니다) <input type="text" class="aowner" maxlength="12" placeholder="예: 현덕"></label>
+          <label class="owner-field">주인 (상단에 입력하는 이름과 같아야 "내 계정"으로 보입니다) <input type="text" class="aowner" maxlength="40" placeholder="예: 현덕"></label>
         </div>
         <div class="row end"><button type="button" data-act="cancel">취소</button><button type="button" data-act="save" class="primary">저장</button></div>`;
       const inp = ed.querySelector('.atitle'); inp.value = a.title || '';
-      const own = ed.querySelector('.aowner'); own.value = a.owner || myName || '';
+      const own = ed.querySelector('.aowner'); own.value = a.owner || ownerKey() || '';
       const saveT = async () => { const title = inp.value.trim(), owner = own.value.trim(); hwEditing = null; const ok = await safeWrite(() => db.collection('hwAccounts').doc(a.id).update({ title, owner })); if (ok) { a.title = title; a.owner = owner; renderHw(); } };
       ed.querySelector('[data-act="save"]').addEventListener('click', saveT);
       ed.querySelector('[data-act="cancel"]').addEventListener('click', () => { hwEditing = null; renderHw(); });
@@ -1138,20 +1252,250 @@ const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지�
     return ed;
   }
 
+  // --- 테마 (시스템 → 라이트 → 다크 순환) ---
+  const THEME_LABEL = { system: '테마: 시스템', light: '테마: 라이트', dark: '테마: 다크' };
+  function getTheme() { try { const t = localStorage.getItem('aion2.theme'); return (t === 'light' || t === 'dark') ? t : 'system'; } catch (e) { return 'system'; } }
+  function applyTheme(t) {
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('aion2.theme', t); } catch (e) { /* ignore */ }
+    ['btnTheme', 'btnThemeApp'].forEach(id => { const b = $(id); if (b) b.textContent = THEME_LABEL[t]; });
+  }
+  function cycleTheme() { const order = ['system', 'light', 'dark']; applyTheme(order[(order.indexOf(getTheme()) + 1) % 3]); }
+  $('btnTheme').addEventListener('click', cycleTheme); $('btnThemeApp').addEventListener('click', cycleTheme);
+  applyTheme(getTheme());
+
   // --- 탭 ---
+  const APP_HW = /[?&]app=hw(&|$)/.test(location.search); // exe 앱 모드: 숙제 탭만 표시
+  if (APP_HW) document.documentElement.classList.add('app-hw');
+  let appOwner = null, appOwnerCustom = false; // 앱 모드: 계정 주인 이름 (exe가 알려줌: 사용자가 정한 이름 또는 PC 이름)
   function showTab(name) {
-    const hw = name === 'hw';
-    $('paneHw').hidden = !hw; $('paneParty').hidden = hw;
-    $('tabHw').classList.toggle('on', hw); $('tabParty').classList.toggle('on', !hw);
+    if (APP_HW && name === 'party') name = 'hw';
+    if (!APP_HW && (name === 'boss' || name === 'content')) name = 'hw';
+    $('paneHw').hidden = name !== 'hw'; $('paneParty').hidden = name !== 'party'; $('paneBoss').hidden = name !== 'boss'; $('paneContent').hidden = name !== 'content';
+    $('tabHw').classList.toggle('on', name === 'hw'); $('tabParty').classList.toggle('on', name === 'party'); $('tabBoss').classList.toggle('on', name === 'boss'); $('tabContent').classList.toggle('on', name === 'content');
+    if (name === 'boss' || name === 'content') loadAlarms();
     try { localStorage.setItem('aion2.tab', name); } catch (e) { /* ignore */ }
   }
   $('tabHw').addEventListener('click', () => showTab('hw'));
   $('tabParty').addEventListener('click', () => showTab('party'));
+  $('tabBoss').addEventListener('click', () => showTab('boss'));
+  $('tabContent').addEventListener('click', () => showTab('content'));
   $('btnAddAcc').addEventListener('click', hwAddAccount);
   $('btnHwScope').addEventListener('click', () => { hwScopeAll = !hwScopeAll; try { localStorage.setItem('aion2.hwScope', hwScopeAll ? 'all' : 'mine'); } catch (e) { /* ignore */ } renderHw(); });
-  try { showTab(localStorage.getItem('aion2.tab') === 'hw' ? 'hw' : 'party'); } catch (e) { showTab('party'); }
+  try { const t = localStorage.getItem('aion2.tab'); showTab(t === 'hw' || t === 'boss' || t === 'content' ? t : 'party'); } catch (e) { showTab('party'); }
   renderClock();
   setInterval(() => { renderClock(); if (!odEditing && !hwEditing) renderHw(); }, 30000);
+  // 앱 모드: exe 내장 낫미터 동기화 상태 · 자동 실행 설정 · 이 PC 식별
+  if (APP_HW) {
+    const tickApp = async () => {
+      $('appClock').textContent = fmtKst(Date.now()); $('appWeek').textContent = `주간 초기화까지 ${fmtLeft(weekStart(Date.now()) + 7 * 86400000 - Date.now())}`;
+      try {
+        const r = await fetch('/api/status', { cache: 'no-store' }); const j = await r.json();
+        $('appSt').className = 'st ' + (j.ok ? 'ok' : 'err'); $('appMsg').textContent = '낫미터 동기화 · ' + (j.message || '');
+        $('appMsg').title = (j.recent || []).join('\n');
+        if (j.owner && appOwner !== j.owner) { appOwner = j.owner; renderHw(); }
+        appOwnerCustom = !!j.ownerIsCustom;
+        $('appOwnerName').textContent = j.owner || '-'; $('appOwnerName').style.color = j.ownerIsCustom ? 'var(--text)' : 'var(--accent)';
+        $('btnOwner').textContent = j.ownerIsCustom ? '변경' : '이름 정하기';
+        if (typeof j.autostart === 'boolean' && document.activeElement !== $('appAutostart')) $('appAutostart').checked = j.autostart;
+      } catch (e) { $('appSt').className = 'st err'; $('appMsg').textContent = '낫미터 동기화 프로그램과 연결되지 않았습니다 (창만 열려 있음)'; }
+    };
+    $('appAutostart').addEventListener('change', async (e) => {
+      try { await fetch('/api/autostart', { method: 'POST', body: JSON.stringify({ enabled: e.target.checked }) }); toast(e.target.checked ? 'Windows 시작 시 자동 실행합니다' : '자동 실행을 껐습니다'); }
+      catch (err) { toast('설정을 저장하지 못했습니다'); e.target.checked = !e.target.checked; }
+    });
+    // 내 이름 설정: exe 에 저장하고, 기존 계정의 주인(이전 이름/PC 이름)도 새 이름으로 옮김
+    $('btnOwner').addEventListener('click', () => { $('ownerInput').value = appOwnerCustom ? appOwner : ''; $('ownerPanel').hidden = false; $('ownerInput').focus(); });
+    $('ownerNo').addEventListener('click', () => { $('ownerPanel').hidden = true; });
+    const saveOwner = async () => {
+      const name = $('ownerInput').value.trim().slice(0, 20);
+      if (!name) { $('ownerInput').focus(); return; }
+      const old = appOwner;
+      try {
+        const r = await fetch('/api/owner', { method: 'POST', body: JSON.stringify({ name }) }); const j = await r.json();
+        $('ownerPanel').hidden = true;
+        if (db && old && old !== j.owner) {
+          const mine = hwAccounts.filter(a => (a.owner || '') === old);
+          if (mine.length) { const batch = db.batch(); mine.forEach(a => batch.update(db.collection('hwAccounts').doc(a.id), { owner: j.owner })); await safeWrite(() => batch.commit()); mine.forEach(a => { a.owner = j.owner; }); }
+        }
+        appOwner = j.owner; renderHw(); tickApp(); toast(`이름을 "${j.owner}" 으로 설정했습니다. 웹에서도 같은 이름을 쓰면 내 계정이 보입니다.`);
+      } catch (e) { toast('이름을 저장하지 못했습니다'); }
+    };
+    $('ownerYes').addEventListener('click', saveOwner);
+    $('ownerInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveOwner(); if (e.key === 'Escape') $('ownerPanel').hidden = true; });
+    tickApp(); setInterval(tickApp, 5000);
+  }
+
+  // =====================================================================
+  // 보스 알림 탭 (exe 전용 · 설정은 exe 옆 alarms.json)
+  // =====================================================================
+  let alarmCfg = { settings: {}, bosses: [], contents: [] }, alarmVoices = [], bossEditing = null;
+  const BOSS_MODE_LABEL = { both: '팝업+음성', toast: '팝업', tts: '음성' };
+  const DAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+  async function loadAlarms() {
+    if (!APP_HW) return;
+    try {
+      const r = await fetch('/api/alarms', { cache: 'no-store' }); const j = await r.json();
+      alarmCfg = { settings: j.settings || {}, bosses: j.bosses || [], contents: j.contents || [] }; alarmVoices = j.voices || [];
+      fillSettings(); renderBosses(j.recentAlerts || []); renderContents();
+    } catch (e) { $('bossNext').textContent = '프로그램과 연결되지 않았습니다 (exe 로 실행해야 알림을 쓸 수 있습니다)'; $('contentNext').textContent = $('bossNext').textContent; }
+  }
+  function fillSettings() {
+    const s = alarmCfg.settings;
+    document.querySelectorAll('#bsMode input').forEach(i => { i.checked = i.value === (s.mode || 'both'); });
+    syncModeChips();
+    $('bsLead').value = s.lead ?? 5;
+    const sel = $('bsVoice'); sel.innerHTML = '<option value="">기본 음성</option>' + alarmVoices.map(v => `<option value="${esc(v.name)}">${esc(v.name)} (${esc(v.culture)})</option>`).join('');
+    sel.value = alarmVoices.some(v => v.name === s.voice) ? s.voice : '';
+    $('bsRate').value = s.rate ?? 0; $('bsVol').value = s.volume ?? 100; $('bsRepeat').value = s.repeat ?? 1;
+    $('bsTpl').value = s.template || '{boss} 출현 {lead}분 전입니다.'; $('bsTplNow').value = s.templateNow || '{boss} 출현 시간입니다.';
+    $('bsRateV').textContent = $('bsRate').value; $('bsVolV').textContent = $('bsVol').value;
+  }
+  function syncModeChips() { document.querySelectorAll('#bsMode label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked)); }
+  function readSettings() {
+    const mode = (document.querySelector('#bsMode input:checked') || {}).value || 'both';
+    return { mode, lead: Math.max(0, parseInt($('bsLead').value.split(/[^0-9]+/)[0] || '5', 10)), leadsRaw: $('bsLead').value.trim(), voice: $('bsVoice').value, rate: +$('bsRate').value, volume: +$('bsVol').value, repeat: Math.max(1, Math.min(3, +$('bsRepeat').value || 1)), template: $('bsTpl').value.trim() || '{boss} 출현 {lead}분 전입니다.', templateNow: $('bsTplNow').value.trim() || '{boss} 출현 시간입니다.' };
+  }
+  async function saveAlarms(msg) {
+    const s = readSettings();
+    // 기본 "몇 분 전"은 숫자 하나로 저장하고, 여러 개를 적었으면 각 보스의 빈 leads 대신 쓰도록 settings.leadsRaw 를 함께 보관
+    alarmCfg.settings = { ...alarmCfg.settings, mode: s.mode, lead: s.lead, voice: s.voice, rate: s.rate, volume: s.volume, repeat: s.repeat, template: s.template, templateNow: s.templateNow };
+    alarmCfg.bosses = alarmCfg.bosses.map(b => ({ ...b, leads: b.leads || (s.leadsRaw.includes(',') ? s.leadsRaw : '') }));
+    try {
+      const r = await fetch('/api/alarms', { method: 'POST', body: JSON.stringify(alarmCfg) }); const j = await r.json();
+      alarmCfg = { settings: j.settings || {}, bosses: j.bosses || [], contents: j.contents || [] }; renderBosses(j.recentAlerts || []); renderContents(); toast(msg || '저장했습니다');
+    } catch (e) { toast('저장하지 못했습니다 (프로그램 연결 확인)'); }
+  }
+  // 요일 조건을 포함한 다음 출현 시각 (최대 8일 앞까지 탐색)
+  function nextSpawnDays(b, now) {
+    let best = null;
+    for (let d = 0; d < 8; d++) {
+      const day = new Date(now); day.setDate(day.getDate() + d); day.setHours(0, 0, 0, 0);
+      if (b.days && b.days.length && !b.days.includes(day.getDay())) continue;
+      (b.times || []).forEach(t => { const [h, m] = t.split(':').map(Number); const dt = new Date(day); dt.setHours(h, m, 0, 0); if (dt > now && (!best || dt < best)) best = dt; });
+      if (best) break;
+    }
+    return best;
+  }
+  function renderContents() {
+    const now = new Date(); $('contentClock').textContent = fmtKst(now.getTime());
+    const root = $('contents'); root.replaceChildren();
+    const group = alarmCfg.settings.artifactGroup || 1;
+    let soonest = null;
+    (alarmCfg.contents || []).forEach(c => {
+      const row = document.createElement('div'); row.className = 'boss' + (c.enabled ? '' : ' off');
+      const ns = c.enabled ? nextSpawnDays(c, now) : null;
+      if (ns && (!soonest || ns < soonest.at)) soonest = { at: ns, b: c };
+      const daysTxt = (c.days && c.days.length) ? c.days.map(d => DAY_KO[d]).join('/') : '매일';
+      const nextStr = ns ? ns.toTimeString().slice(0, 5) : '';
+      const isArtifact = c.key === 'artifact';
+      row.innerHTML = `<div><div class="bname">${esc(c.name)}</div><div class="bmeta">${isArtifact ? `그룹 ${group} 기준 · ` : ''}${esc(c.memo || '')}</div>
+          ${isArtifact ? `<div class="grp" style="margin-top:6px" title="서버가 속한 그룹을 고르세요">${[1, 2, 3].map(g => `<button type="button" data-g="${g}" class="${g === group ? 'on' : ''}">그룹 ${g}</button>`).join('')}</div>` : ''}</div>
+        <div class="times"><span class="days">${daysTxt}</span>${(c.times || []).map(t => `<span class="${t === nextStr && ns && ns.toDateString() === now.toDateString() ? 'next' : ''}">${t}</span>`).join('')}${ns ? `<span class="days" style="margin-left:6px">다음 ${DAY_KO[ns.getDay()]} ${nextStr}</span>` : ''}</div>
+        <div class="ctl">
+          <label class="task ${c.enabled ? 'done' : ''}"><input type="checkbox" class="en" ${c.enabled ? 'checked' : ''}><span class="t">알림</span></label>
+          <label>몇 분 전 <input type="text" class="ld" value="${esc(c.leads || '')}" placeholder="기본 ${alarmCfg.settings.lead ?? 5}"></label>
+          <label>방식 <select class="md"><option value="">기본</option><option value="both">팝업+음성</option><option value="toast">팝업만</option><option value="tts">음성만</option></select></label>
+        </div>`;
+      row.querySelector('.md').value = c.mode || '';
+      row.querySelector('.en').addEventListener('change', (e) => { c.enabled = e.target.checked; saveAlarms(`${c.name} 알림 ${c.enabled ? '켬' : '끔'}`); });
+      row.querySelector('.md').addEventListener('change', (e) => { c.mode = e.target.value; saveAlarms(`${c.name} 방식 저장`); });
+      const ld = row.querySelector('.ld');
+      const saveLead = () => { const v = ld.value.replace(/[^0-9,\s/]/g, '').trim(); if (v !== (c.leads || '')) { c.leads = v; saveAlarms(`${c.name} 알림 시각 저장`); } };
+      ld.addEventListener('change', saveLead); ld.addEventListener('keydown', (e) => { if (e.key === 'Enter') { saveLead(); ld.blur(); } });
+      row.querySelectorAll('.grp button').forEach(b => b.addEventListener('click', () => { alarmCfg.settings.artifactGroup = +b.dataset.g; saveAlarms(`아티팩트 쟁탈전 그룹 ${b.dataset.g} (${b.dataset.g === '1' ? '21:20' : b.dataset.g === '2' ? '21:50' : '22:20'} 시작)`); }));
+      root.appendChild(row);
+    });
+    if (soonest) {
+      const leads = (soonest.b.leads || String(alarmCfg.settings.lead ?? 5)).split(/[,\s/]+/).filter(Boolean).map(Number);
+      const lead = Math.max(...leads, 0); const alertAt = new Date(soonest.at.getTime() - lead * 60000);
+      $('contentNext').innerHTML = `다음 알림 <b>${esc(soonest.b.name)}</b> · ${DAY_KO[soonest.at.getDay()]} ${soonest.at.toTimeString().slice(0, 5)} 시작 · 알림 ${alertAt.toTimeString().slice(0, 5)} (${fmtLeft(alertAt - now)} 후)`;
+    } else $('contentNext').textContent = '켜진 컨텐츠 알림이 없습니다. 아래에서 알림을 켜세요.';
+  }
+  function parseTimes(s) { return [...new Set(s.split(/[^0-9:]+/).map(t => t.trim()).filter(Boolean).map(t => { const m = t.match(/^(\d{1,2}):?(\d{2})$/); if (!m) return null; const h = +m[1], mi = +m[2]; if (h > 23 || mi > 59) return null; return `${String(h).padStart(2, '0')}:${m[2]}`; }).filter(Boolean))].sort(); }
+  function nextSpawn(b, now) {
+    let best = null;
+    (b.times || []).forEach(t => { const [h, m] = t.split(':').map(Number); const d = new Date(now); d.setHours(h, m, 0, 0); if (d <= now) d.setDate(d.getDate() + 1); if (!best || d < best) best = d; });
+    return best;
+  }
+  function renderBosses(recent) {
+    const now = new Date(); $('bossClock').textContent = fmtKst(now.getTime());
+    const root = $('bosses'); root.replaceChildren();
+    let soonest = null;
+    alarmCfg.bosses.forEach(b => {
+      const row = document.createElement('div'); row.className = 'boss' + (b.enabled === false ? ' off' : '');
+      const ns = b.enabled !== false ? nextSpawnDays(b, now) : null;
+      if (ns && (!soonest || ns < soonest.at)) soonest = { at: ns, b };
+      const leads = b.leads || String(alarmCfg.settings.lead ?? 5);
+      const nextStr = ns ? ns.toTimeString().slice(0, 5) : '';
+      const daysTxt = (b.days && b.days.length) ? [1, 2, 3, 4, 5, 6, 0].filter(d => b.days.includes(d)).map(d => DAY_KO[d]).join('/') : '매일';
+      row.innerHTML = `<div><div class="bname">${esc(b.name || '(이름 없음)')}</div><div class="bmeta">${leads.split(/[,\s/]+/).filter(Boolean).map(x => x + '분 전').join(' · ')} · ${BOSS_MODE_LABEL[b.mode] || '기본 방식'}${b.memo ? ' · ' + esc(b.memo) : ''}</div></div>
+        <div class="times"><span class="days">${daysTxt}</span>${(b.times || []).map(t => `<span class="${t === nextStr && ns && ns.toDateString() === now.toDateString() ? 'next' : ''}">${t}</span>`).join('') || '<span style="color:var(--muted)">출현 시각 없음</span>'}${ns ? `<span class="days" style="margin-left:6px">다음 ${DAY_KO[ns.getDay()]} ${nextStr}</span>` : ''}</div>
+        <div class="bact"><label class="task ${b.enabled !== false ? 'done' : ''}" title="알림 켜기/끄기"><input type="checkbox" ${b.enabled !== false ? 'checked' : ''}><span class="t">알림</span></label><button type="button" class="ghost" data-act="edit">수정</button></div>`;
+      row.querySelector('input[type="checkbox"]').addEventListener('change', (e) => { b.enabled = e.target.checked; saveAlarms(b.enabled ? `${b.name} 알림 켬` : `${b.name} 알림 끔`); });
+      row.querySelector('[data-act="edit"]').addEventListener('click', () => { bossEditing = b.id; renderBosses(recent); });
+      if (bossEditing === b.id) row.appendChild(buildBossEditor(b));
+      root.appendChild(row);
+    });
+    if (!alarmCfg.bosses.length) { const e = document.createElement('div'); e.className = 'notice'; e.textContent = '등록된 보스가 없습니다. "+ 보스 추가"를 눌러 보스 이름과 출현 시각을 넣으세요.'; root.appendChild(e); }
+    if (soonest) {
+      const leads = (soonest.b.leads || String(alarmCfg.settings.lead ?? 5)).split(/[,\s/]+/).filter(Boolean).map(Number);
+      const lead = Math.max(...leads, 0); const alertAt = new Date(soonest.at.getTime() - lead * 60000);
+      $('bossNext').innerHTML = `다음 알림 <b>${esc(soonest.b.name)}</b> · 출현 ${soonest.at.toTimeString().slice(0, 5)} · 알림 ${alertAt.toTimeString().slice(0, 5)} (${fmtLeft(alertAt - now)} 후)`;
+    } else $('bossNext').textContent = '예정된 알림이 없습니다';
+    const rc = $('bossRecent'); rc.hidden = !recent.length; rc.textContent = recent.length ? '최근 알림: ' + recent.slice(0, 5).join(' · ') : '';
+  }
+  function buildBossEditor(b) {
+    const ed = document.createElement('div'); ed.className = 'heditor'; ed.style.gridColumn = '1 / -1';
+    ed.innerHTML = `<div class="two">
+        <label>보스 이름 <input type="text" class="bn" maxlength="30" placeholder="예: 가르바"></label>
+        <label>출현 시각 (여러 개는 쉼표: 12:00, 18:00, 21:30) <input type="text" class="bt" placeholder="12:00, 18:00"></label>
+      </div>
+      <label style="display:grid;gap:4px;font-size:12px;color:var(--muted)">출현 요일 <span class="row bdays"></span></label>
+      <div class="two">
+        <label>몇 분 전 알림 (비우면 기본값 · 여러 개는 쉼표: 10,3 · 0은 출현 시각) <input type="text" class="bl" placeholder="기본값 사용"></label>
+        <label>알림 방식 <select class="bm"><option value="">기본 방식</option><option value="both">팝업+음성</option><option value="toast">팝업만</option><option value="tts">음성만</option></select></label>
+      </div>
+      <label style="display:grid;gap:3px;font-size:12px;color:var(--muted)">메모 (선택) <input type="text" class="bmemo" maxlength="40" placeholder="예: 북쪽 입구"></label>
+      <div class="row end"><button type="button" class="ghost danger" data-act="del">보스 삭제</button><span class="grow"></span><button type="button" data-act="cancel">취소</button><button type="button" class="primary" data-act="save">저장</button></div>`;
+    ed.querySelector('.bn').value = b.name || ''; ed.querySelector('.bt').value = (b.times || []).join(', '); ed.querySelector('.bl').value = b.leads || ''; ed.querySelector('.bm').value = b.mode || ''; ed.querySelector('.bmemo').value = b.memo || '';
+    // 요일 토글: 모든 요일 + 월~일 (JS 요일 번호: 월=1 … 토=6, 일=0). 7개 다 고르면 "모든 요일"과 같게 처리
+    let days = (b.days || []).slice();
+    const daysBox = ed.querySelector('.bdays');
+    const drawDays = () => {
+      const all = days.length === 0;
+      daysBox.innerHTML = `<button type="button" class="pick ${all ? 'on' : ''}" data-d="all">모든 요일</button>` + [1, 2, 3, 4, 5, 6, 0].map(d => `<button type="button" class="pick ${!all && days.includes(d) ? 'on' : ''}" data-d="${d}">${DAY_KO[d]}</button>`).join('');
+      daysBox.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+        if (btn.dataset.d === 'all') days = [];
+        else { const d = +btn.dataset.d; days = days.includes(d) ? days.filter(x => x !== d) : [...days, d]; if (days.length >= 7) days = []; }
+        drawDays();
+      }));
+    };
+    drawDays();
+    const save = () => {
+      const name = ed.querySelector('.bn').value.trim(); const times = parseTimes(ed.querySelector('.bt').value);
+      if (!name) { toast('보스 이름을 입력하세요'); return; } if (!times.length) { toast('출현 시각을 HH:MM 형식으로 하나 이상 입력하세요'); return; }
+      Object.assign(b, { name, times, days: days.slice().sort(), leads: ed.querySelector('.bl').value.replace(/[^0-9,\s/]/g, '').trim(), mode: ed.querySelector('.bm').value, memo: ed.querySelector('.bmemo').value.trim() });
+      bossEditing = null; saveAlarms(`${name} 저장`);
+    };
+    ed.querySelector('[data-act="save"]').addEventListener('click', save);
+    ed.querySelector('[data-act="cancel"]').addEventListener('click', () => { if (!b.name) alarmCfg.bosses = alarmCfg.bosses.filter(x => x.id !== b.id); bossEditing = null; renderBosses([]); });
+    ed.querySelector('[data-act="del"]').addEventListener('click', () => { alarmCfg.bosses = alarmCfg.bosses.filter(x => x.id !== b.id); bossEditing = null; saveAlarms('삭제했습니다'); });
+    ed.querySelectorAll('input').forEach(i => i.addEventListener('keydown', (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { bossEditing = null; renderBosses([]); } }));
+    setTimeout(() => ed.querySelector('.bn').focus(), 0);
+    return ed;
+  }
+  $('btnAddBoss').addEventListener('click', () => { const id = 'b' + Date.now().toString(36); alarmCfg.bosses.push({ id, name: '', times: [], days: [], leads: '', mode: '', enabled: true, memo: '' }); bossEditing = id; renderBosses([]); });
+  $('bsSave').addEventListener('click', () => saveAlarms('알림 설정을 저장했습니다'));
+  $('bsTest').addEventListener('click', async () => {
+    const s = readSettings();
+    const text = s.template.replace('{boss}', alarmCfg.bosses[0] ? alarmCfg.bosses[0].name : '테스트 보스').replace('{lead}', String(s.lead)).replace('{time}', '12:00');
+    try { await fetch('/api/alarms/test', { method: 'POST', body: JSON.stringify({ text, mode: s.mode, voice: s.voice, rate: s.rate, volume: s.volume }) }); toast('테스트 알림을 보냈습니다'); } catch (e) { toast('프로그램과 연결되지 않았습니다'); }
+  });
+  document.querySelectorAll('#bsMode input').forEach(i => i.addEventListener('change', syncModeChips));
+  $('bsRate').addEventListener('input', () => { $('bsRateV').textContent = $('bsRate').value; });
+  $('bsVol').addEventListener('input', () => { $('bsVolV').textContent = $('bsVol').value; });
+  if (APP_HW) setInterval(() => { if (!$('paneBoss').hidden && bossEditing === null) renderBosses([]); if (!$('paneContent').hidden && document.activeElement.tagName !== 'INPUT') renderContents(); }, 30000);
 
   // ---------- wiring ----------
   $('btnReset').addEventListener('click', () => { $('settingsPanel').hidden = true; editing = null; render(); $('resetPanel').hidden = false; });
