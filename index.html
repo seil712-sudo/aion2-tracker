@@ -258,7 +258,8 @@
   .heditor .hint { font-size: 12px; color: var(--muted); }
 
   /* ===== 숙제 전용 앱 모드 (exe가 ?app=hw 로 엽니다) ===== */
-  .app-hw #tabParty, .app-hw #paneParty, .app-hw .summary, .app-hw .owner-field, .app-hw #mePanel, .app-hw #btnHwScope, .app-hw #btnTheme, .app-hw #meHw { display: none !important; }
+  /* 앱 모드: 파티 탭도 보이되, 이름 입력 UI는 숨김 (exe 에서 정한 이름을 씀) */
+  .app-hw .owner-field, .app-hw #mePanel, .app-hw #btnHwScope, .app-hw #btnTheme, .app-hw #meHw, .app-hw .me { display: none !important; }
   #tabBoss, #tabContent { display: none; }
   .app-hw #tabBoss, .app-hw #tabContent { display: inline-block; }
   /* 컨텐츠 알림 탭 */
@@ -468,7 +469,7 @@ const LOW_POWER = 500000;            // 이 값 미만이면 "남툴 500k 미만
 const POWER_STALE_MS = 60 * 60 * 1000; // 1시간 지난 전투력은 페이지를 열 때 자동 갱신
 
 // 배포 버전 표시 (파일을 고칠 때마다 갱신)
-const APP_VERSION = '2026-10-18 20:50';
+const APP_VERSION = '2026-10-18 21:05';
 
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -532,7 +533,13 @@ const APP_VERSION = '2026-10-18 20:50';
     return top + sub;
   }
   function nextNum() { for (const n of config.sequence) if (doneByNum(n) === false) return n; return null; }
-  function needName() { if (myName) return false; $('mePanel').hidden = false; $('meInput').focus(); toast('먼저 이름을 입력해 주세요'); return true; }
+  // 체크한 사람 이름: 앱(exe) 모드에서는 exe에서 정한 이름, 웹에서는 입력한 이름
+  function checkerName() { return (typeof APP_HW !== 'undefined' && APP_HW && typeof appOwner !== 'undefined' && appOwner) ? appOwner : myName; }
+  function needName() {
+    if (checkerName()) return false;
+    if (typeof APP_HW !== 'undefined' && APP_HW) { toast('프로그램과 연결 중입니다. 잠시 후 다시 눌러주세요.'); return true; }
+    $('mePanel').hidden = false; $('meInput').focus(); toast('먼저 이름을 입력해 주세요'); return true;
+  }
 
   async function safeWrite(fn, okMsg) {
     if (!db) { toast('데이터베이스에 연결되지 않았습니다'); return false; }
@@ -808,7 +815,7 @@ const APP_VERSION = '2026-10-18 20:50';
     const ok = await safeWrite(() => db.collection('groups').doc(g.id).update(patch));
     if (ok) { editing = null; Object.assign(g, patch); render(); }
   }
-  function donePatch(done) { return done ? { done: true, doneBy: myName, doneAt: new Date().toISOString() } : { done: false, doneBy: null, doneAt: null }; }
+  function donePatch(done) { return done ? { done: true, doneBy: checkerName(), doneAt: new Date().toISOString() } : { done: false, doneBy: null, doneAt: null }; }
   async function toggleDone(p, done, input) {
     if (done && needName()) { input.checked = false; return; }
     input.disabled = true;
@@ -1276,7 +1283,6 @@ const APP_VERSION = '2026-10-18 20:50';
   if (APP_HW) document.documentElement.classList.add('app-hw');
   let appOwner = null, appOwnerCustom = false; // 앱 모드: 계정 주인 이름 (exe가 알려줌: 사용자가 정한 이름 또는 PC 이름)
   function showTab(name) {
-    if (APP_HW && name === 'party') name = 'hw';
     if (!APP_HW && (name === 'boss' || name === 'content')) name = 'hw';
     $('paneHw').hidden = name !== 'hw'; $('paneParty').hidden = name !== 'party'; $('paneBoss').hidden = name !== 'boss'; $('paneContent').hidden = name !== 'content';
     $('tabHw').classList.toggle('on', name === 'hw'); $('tabParty').classList.toggle('on', name === 'party'); $('tabBoss').classList.toggle('on', name === 'boss'); $('tabContent').classList.toggle('on', name === 'content');
@@ -1289,7 +1295,7 @@ const APP_VERSION = '2026-10-18 20:50';
   $('tabContent').addEventListener('click', () => showTab('content'));
   $('btnAddAcc').addEventListener('click', hwAddAccount);
   $('btnHwScope').addEventListener('click', () => { hwScopeAll = !hwScopeAll; try { localStorage.setItem('aion2.hwScope', hwScopeAll ? 'all' : 'mine'); } catch (e) { /* ignore */ } renderHw(); });
-  try { const t = localStorage.getItem('aion2.tab'); showTab(t === 'hw' || t === 'boss' || t === 'content' ? t : 'party'); } catch (e) { showTab('party'); }
+  try { const t = localStorage.getItem('aion2.tab'); showTab(t === 'hw' || t === 'boss' || t === 'content' || t === 'party' ? t : (APP_HW ? 'hw' : 'party')); } catch (e) { showTab(APP_HW ? 'hw' : 'party'); }
   renderClock();
   setInterval(() => { renderClock(); if (!odEditing && !hwEditing) renderHw(); }, 30000);
   // 앱 모드: exe 내장 낫미터 동기화 상태 · 자동 실행 설정 · 이 PC 식별
